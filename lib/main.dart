@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
+
+const String studentName = 'Ni Komang Laksmi Kaori';
+const String studentId = '2415051033';
 
 void main() {
   runApp(const MyApp());
@@ -13,182 +14,135 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: DashboardPage(),
+      home: Tahap16Page(),
     );
   }
 }
 
-Future<Map<String, dynamic>> loadStudentData() async {
-  final jsonString = await rootBundle.loadString('assets/data/student_data.json');
-  return jsonDecode(jsonString) as Map<String, dynamic>;
-}
-
-class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+class Tahap16Page extends StatefulWidget {
+  const Tahap16Page({super.key});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  State<Tahap16Page> createState() => _Tahap16PageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
-  late Future<Map<String, dynamic>> studentFuture;
+class _Tahap16PageState extends State<Tahap16Page> {
+  // Variabel untuk Kasus D (Mencegah navigasi ganda)
+  bool _isNavigating = false;
 
-  @override
-  void initState() {
-    super.initState();
-    studentFuture = loadStudentData();
-  }
-
-  // --- REUSABLE WIDGET 1: Kartu Profil ---
-  // Memenuhi syarat tugas memisahkan widget (Tugas 2)
-  Widget _buildProfileCard(Map<String, dynamic> student) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 36,
-              backgroundImage: AssetImage('assets/images/profile.jpg'),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    student['name'] ?? 'Nama Mahasiswa',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(student['nim'] ?? 'NIM', style: TextStyle(color: Colors.grey[700])),
-                  const SizedBox(height: 4),
-                  // Menampilkan field tambahan (Tugas 3)
-                  Text(
-                    'Angkatan: ${student['batch'] ?? '-'}',
-                    style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+  void _safeNavigate() async {
+    // Jika sedang proses navigasi, cegah klik berulang
+    if (_isNavigating) return;
+    
+    setState(() => _isNavigating = true);
+    
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const DummyPage()),
     );
-  }
-
-  // --- REUSABLE WIDGET 2: Kartu Ringkasan (Summary) ---
-  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
-    return Expanded(
-      child: Card(
-        elevation: 2,
-        color: color.withOpacity(0.1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16.0),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 28),
-              const SizedBox(height: 8),
-              Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text(title, style: TextStyle(color: Colors.grey[800], fontSize: 12)),
-            ],
-          ),
-        ),
-      ),
-    );
+    
+    // Kembalikan status setelah kembali dari halaman tujuan
+    setState(() => _isNavigating = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Learning Dashboard'),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
-      ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: studentFuture,
-        builder: (context, snapshot) {
-          // Status Loading
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          // Status Error
-          if (snapshot.hasError) {
-            return Center(child: Text('Terjadi kesalahan: ${snapshot.error}'));
-          }
+      appBar: AppBar(title: const Text('Tahap 16: Debugging Solved')),
+      // KASUS C SOLUSI: Menggunakan SingleChildScrollView agar tidak overflow saat keyboard muncul
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '$studentId - $studentName',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blue),
+            ),
+            const Divider(height: 32),
 
-          // Mengambil Data
-          final data = snapshot.data!;
-          final student = data['student'] as Map<String, dynamic>;
-          final courses = data['courses'] as List<dynamic>;
-
-          // Menghitung otomatis total SKS dan materi selesai untuk Summary Card
-          int totalCredits = 0;
-          int completedTopics = 0;
-          for (var course in courses) {
-            totalCredits += (course['credits'] as int? ?? 0);
-            if (course['status'] == 'done') completedTopics++;
-          }
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // KASUS A SOLUSI: Menggunakan Expanded pada teks panjang di dalam Row
+            const Text('Kasus A: RenderFlex Overflow', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Row(
               children: [
-                _buildProfileCard(student),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildSummaryCard('Total SKS', totalCredits.toString(), Icons.book, Colors.blue),
-                    const SizedBox(width: 12),
-                    _buildSummaryCard('Selesai', '$completedTopics / ${courses.length}', Icons.check_circle, Colors.green),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                const Text('Daftar Materi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: courses.length,
-                    itemBuilder: (context, index) {
-                      final course = courses[index] as Map<String, dynamic>;
-                      final isDone = course['status'] == 'done';
-
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: isDone ? Colors.green.shade100 : Colors.orange.shade100,
-                            child: Icon(
-                              isDone ? Icons.check : Icons.access_time,
-                              color: isDone ? Colors.green : Colors.orange,
-                            ),
-                          ),
-                          title: Text(course['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('${course['code']} • ${course['credits']} SKS'),
-                          trailing: Text(
-                            isDone ? 'Selesai' : 'Berjalan',
-                            style: TextStyle(
-                              color: isDone ? Colors.green : Colors.orange,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                Icon(Icons.info, color: Colors.blue),
+                SizedBox(width: 8),
+                Expanded( // Ini solusinya
+                  child: Text(
+                    'Teks ini sangat panjang dan akan menyebabkan overflow jika tidak dibungkus dengan widget Expanded. Sekarang sudah aman!',
                   ),
                 ),
               ],
             ),
-          );
-        },
+            const Divider(height: 32),
+
+            // KASUS B SOLUSI: Menambahkan shrinkWrap & NeverScrollableScrollPhysics pada ListView
+            const Text('Kasus B: Vertical Viewport Unbounded', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ListView.builder(
+              shrinkWrap: true, // Ini solusinya
+              physics: const NeverScrollableScrollPhysics(), // Mematikan scroll internal ListView
+              itemCount: 2,
+              itemBuilder: (context, index) {
+                return Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.check_circle, color: Colors.green),
+                    title: Text('Item ListView $index (Fixed)'),
+                  ),
+                );
+              },
+            ),
+            const Divider(height: 32),
+
+            // KASUS D SOLUSI: Validasi _isNavigating pada tombol
+            const Text('Kasus D: Navigasi Ganda (Double Push)', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _isNavigating ? null : _safeNavigate,
+              child: Text(_isNavigating ? 'Memproses...' : 'Navigasi Aman (Coba tap cepat!)'),
+            ),
+            const Divider(height: 32),
+
+            // KASUS C (Pemicu Keyboard): TextField ini akan aman dari overflow karena SingleChildScrollView
+            const Text('Kasus C: Keyboard Overflow', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Tap di sini untuk buka keyboard',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 100), // Spasi agar halaman bisa di-scroll ke bawah
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Halaman dummy untuk mengetes solusi navigasi ganda
+class DummyPage extends StatelessWidget {
+  const DummyPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Halaman Tujuan')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.verified, color: Colors.green, size: 60),
+            const SizedBox(height: 16),
+            const Text('Berhasil pindah halaman dengan aman!'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Kembali'),
+            )
+          ],
+        ),
       ),
     );
   }
