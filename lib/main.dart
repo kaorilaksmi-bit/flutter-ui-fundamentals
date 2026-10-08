@@ -39,19 +39,28 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
     {"code": "DSG01", "title": "UI/UX Design & Prototyping", "status": "planned", "credits": 2, "isFav": false},
   ];
 
+  // TAHAP 2: state favorites dimiliki parent (ResponsiveShell).
+  // Child hanya mengubahnya lewat callback ini.
+  void _toggleFavorite(int index) {
+    setState(() {
+      _courses[index]['isFav'] = !_courses[index]['isFav'];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      HomePage(studentId: studentId, studentName: studentName),
+      HomePage(
+        studentId: studentId,
+        studentName: studentName,
+        courses: _courses, // data dikirim lewat constructor (child 1)
+        onToggleFavorite: _toggleFavorite, // callback child -> parent
+      ),
       CoursesPage(
         courses: _courses,
         studentId: studentId,
         studentName: studentName,
-        onToggleFavorite: (index) {
-          setState(() {
-            _courses[index]['isFav'] = !_courses[index]['isFav'];
-          });
-        },
+        onToggleFavorite: _toggleFavorite, // data + callback (child 2)
       ),
       ProfilePage(studentId: studentId, studentName: studentName),
     ];
@@ -99,8 +108,16 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
 class HomePage extends StatelessWidget {
   final String studentId;
   final String studentName;
+  final List<Map<String, dynamic>> courses;
+  final void Function(int index) onToggleFavorite;
 
-  const HomePage({super.key, required this.studentId, required this.studentName});
+  const HomePage({
+    super.key,
+    required this.studentId,
+    required this.studentName,
+    required this.courses,
+    required this.onToggleFavorite,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +158,26 @@ class HomePage extends StatelessWidget {
                 onTap: () {},
               ),
             ),
+            const SizedBox(height: 20),
+            Text(
+              'Course Favorit (${courses.where((c) => c['isFav'] == true).length})',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            if (courses.every((c) => c['isFav'] != true))
+              const Text('Belum ada course favorit.'),
+            for (int i = 0; i < courses.length; i++)
+              if (courses[i]['isFav'] == true)
+                Card(
+                  child: ListTile(
+                    title: Text(courses[i]['title']),
+                    subtitle: Text(courses[i]['code']),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.favorite, color: Colors.red),
+                      onPressed: () => onToggleFavorite(i),
+                    ),
+                  ),
+                ),
           ],
         ),
       ),
