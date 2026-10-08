@@ -223,54 +223,25 @@ class CoursesPage extends StatelessWidget {
                     itemCount: courses.length,
                     itemBuilder: (context, index) {
                       final course = courses[index];
-                      return Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(10),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => CourseDetailPage(course: course, studentId: studentId, studentName: studentName),
+                      // TAHAP 3: CourseCard tidak menyimpan state favorite.
+                      // Ia hanya menerima nilai (isFavorite) dan mengirim aksi (callback).
+                      return CourseCard(
+                        course: course,
+                        isFavorite: course['isFav'] == true,
+                        onFavoriteChanged: () => onToggleFavorite(index),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CourseDetailPage(
+                                course: course,
+                                studentId: studentId,
+                                studentName: studentName,
+                                onFavoriteChanged: () => onToggleFavorite(index),
                               ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(course['code'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
-                                    IconButton(
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                      onPressed: () => onToggleFavorite(index),
-                                      icon: Icon(
-                                        course['isFav'] ? Icons.favorite : Icons.favorite_border,
-                                        color: course['isFav'] ? Colors.red : Colors.grey,
-                                        size: 20,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  course['title'],
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Text('Status: ${course['status']}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                              ],
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -284,12 +255,80 @@ class CoursesPage extends StatelessWidget {
   }
 }
 
+class CourseCard extends StatelessWidget {
+  final Map<String, dynamic> course;
+  final bool isFavorite;
+  final VoidCallback onFavoriteChanged;
+  final VoidCallback onTap;
+
+  const CourseCard({
+    super.key,
+    required this.course,
+    required this.isFavorite,
+    required this.onFavoriteChanged,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(course['code'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: onFavoriteChanged,
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorite ? Colors.red : Colors.grey,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                course['title'],
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text('Status: ${course['status']}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class CourseDetailPage extends StatefulWidget {
   final Map<String, dynamic> course;
   final String studentId;
   final String studentName;
+  final VoidCallback onFavoriteChanged;
 
-  const CourseDetailPage({super.key, required this.course, required this.studentId, required this.studentName});
+  const CourseDetailPage({
+    super.key,
+    required this.course,
+    required this.studentId,
+    required this.studentName,
+    required this.onFavoriteChanged,
+  });
 
   @override
   State<CourseDetailPage> createState() => _CourseDetailPageState();
@@ -303,6 +342,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   @override
   Widget build(BuildContext context) {
     final course = widget.course;
+    // Dibaca langsung dari sumber yang sama (_courses di parent), bukan salinan.
+    final isFav = course['isFav'] == true;
 
     return Scaffold(
       appBar: AppBar(title: Text(course['title'])),
@@ -315,6 +356,14 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             const Divider(height: 30),
             Text('Judul: ${course['title']}', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () {
+                widget.onFavoriteChanged(); // ubah state di parent
+                setState(() {}); // route detail berada di luar shell, jadi perlu rebuild sendiri
+              },
+              icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? Colors.red : Colors.grey),
+              label: Text(isFav ? 'Hapus dari favorit' : 'Tambah ke favorit'),
+            ),
             TextButton.icon(
               onPressed: () {
                 setState(() {
