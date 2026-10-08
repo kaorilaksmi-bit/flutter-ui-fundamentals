@@ -43,7 +43,16 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   Widget build(BuildContext context) {
     final List<Widget> pages = [
       HomePage(studentId: studentId, studentName: studentName),
-      CoursesPage(courses: _courses, studentId: studentId, studentName: studentName),
+      CoursesPage(
+        courses: _courses,
+        studentId: studentId,
+        studentName: studentName,
+        onToggleFavorite: (index) {
+          setState(() {
+            _courses[index]['isFav'] = !_courses[index]['isFav'];
+          });
+        },
+      ),
       ProfilePage(studentId: studentId, studentName: studentName),
     ];
 
@@ -143,8 +152,9 @@ class CoursesPage extends StatelessWidget {
   final List<Map<String, dynamic>> courses;
   final String studentId;
   final String studentName;
+  final void Function(int index) onToggleFavorite;
 
-  const CoursesPage({super.key, required this.courses, required this.studentId, required this.studentName});
+  const CoursesPage({super.key, required this.courses, required this.studentId, required this.studentName, required this.onToggleFavorite});
 
   int _getCrossAxisCount(double width) {
     if (width < 600) return 1;
@@ -199,10 +209,15 @@ class CoursesPage extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(course['code'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
-                                    Icon(
-                                      course['isFav'] ? Icons.favorite : Icons.favorite_border,
-                                      color: course['isFav'] ? Colors.red : Colors.grey,
-                                      size: 20,
+                                    IconButton(
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      onPressed: () => onToggleFavorite(index),
+                                      icon: Icon(
+                                        course['isFav'] ? Icons.favorite : Icons.favorite_border,
+                                        color: course['isFav'] ? Colors.red : Colors.grey,
+                                        size: 20,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -232,7 +247,7 @@ class CoursesPage extends StatelessWidget {
   }
 }
 
-class CourseDetailPage extends StatelessWidget {
+class CourseDetailPage extends StatefulWidget {
   final Map<String, dynamic> course;
   final String studentId;
   final String studentName;
@@ -240,7 +255,18 @@ class CourseDetailPage extends StatelessWidget {
   const CourseDetailPage({super.key, required this.course, required this.studentId, required this.studentName});
 
   @override
+  State<CourseDetailPage> createState() => _CourseDetailPageState();
+}
+
+class _CourseDetailPageState extends State<CourseDetailPage> {
+  // TAHAP 1 - LOCAL STATE: hanya dipakai oleh halaman detail ini,
+  // tidak dibutuhkan screen/widget lain, sehingga cukup memakai setState().
+  bool _showDetail = false;
+
+  @override
   Widget build(BuildContext context) {
+    final course = widget.course;
+
     return Scaffold(
       appBar: AppBar(title: Text(course['title'])),
       body: Padding(
@@ -248,15 +274,26 @@ class CourseDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('$studentId - $studentName', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+            Text('${widget.studentId} - ${widget.studentName}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
             const Divider(height: 30),
-            Text('Kode Mata Kuliah: ${course['code']}', style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 8),
             Text('Judul: ${course['title']}', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Jumlah SKS: ${course['credits']}', style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 8),
-            Text('Status: ${course['status']}', style: const TextStyle(fontSize: 16)),
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _showDetail = !_showDetail;
+                });
+              },
+              icon: Icon(_showDetail ? Icons.expand_less : Icons.expand_more),
+              label: Text(_showDetail ? 'Sembunyikan detail' : 'Tampilkan detail'),
+            ),
+            if (_showDetail) ...[
+              Text('Kode Mata Kuliah: ${course['code']}', style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('Jumlah SKS: ${course['credits']}', style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('Status: ${course['status']}', style: const TextStyle(fontSize: 16)),
+            ],
           ],
         ),
       ),
