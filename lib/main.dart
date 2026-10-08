@@ -39,12 +39,26 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
     {"code": "DSG01", "title": "UI/UX Design & Prototyping", "status": "planned", "credits": 2, "isFav": false},
   ];
 
+  // TAHAP 4: ValueNotifier untuk nilai sederhana yang bisa dipantau.
+  late final ValueNotifier<int> _favoriteCount =
+      ValueNotifier<int>(_courses.where((c) => c['isFav'] == true).length);
+  final ValueNotifier<int> _demoCounter = ValueNotifier<int>(0);
+
+  @override
+  void dispose() {
+    _favoriteCount.dispose();
+    _demoCounter.dispose();
+    super.dispose();
+  }
+
   // TAHAP 2: state favorites dimiliki parent (ResponsiveShell).
   // Child hanya mengubahnya lewat callback ini.
   void _toggleFavorite(int index) {
     setState(() {
       _courses[index]['isFav'] = !_courses[index]['isFav'];
     });
+    // perbarui ValueNotifier agar listener ikut berubah
+    _favoriteCount.value = _courses.where((c) => c['isFav'] == true).length;
   }
 
   @override
@@ -55,6 +69,8 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
         studentName: studentName,
         courses: _courses, // data dikirim lewat constructor (child 1)
         onToggleFavorite: _toggleFavorite, // callback child -> parent
+        favoriteCount: _favoriteCount,
+        demoCounter: _demoCounter,
       ),
       CoursesPage(
         courses: _courses,
@@ -110,6 +126,8 @@ class HomePage extends StatelessWidget {
   final String studentName;
   final List<Map<String, dynamic>> courses;
   final void Function(int index) onToggleFavorite;
+  final ValueNotifier<int> favoriteCount;
+  final ValueNotifier<int> demoCounter;
 
   const HomePage({
     super.key,
@@ -117,6 +135,8 @@ class HomePage extends StatelessWidget {
     required this.studentName,
     required this.courses,
     required this.onToggleFavorite,
+    required this.favoriteCount,
+    required this.demoCounter,
   });
 
   @override
@@ -156,6 +176,42 @@ class HomePage extends StatelessWidget {
                 subtitle: const Text('Lihat modul pembelajaran mobile programming'),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {},
+              ),
+            ),
+            const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Eksperimen ValueNotifier', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    // Hanya widget ini yang rebuild saat favoriteCount berubah
+                    ValueListenableBuilder<int>(
+                      valueListenable: favoriteCount,
+                      builder: (context, value, child) => Text('Jumlah favorite: $value'),
+                    ),
+                    const SizedBox(height: 8),
+                    // Counter demo: berubah tanpa setState() pada parent
+                    ValueListenableBuilder<int>(
+                      valueListenable: demoCounter,
+                      builder: (context, value, child) {
+                        debugPrint('ValueListenableBuilder rebuild: $value');
+                        return Row(
+                          children: [
+                            Text('Counter: $value'),
+                            const SizedBox(width: 12),
+                            ElevatedButton(
+                              onPressed: () => demoCounter.value++,
+                              child: const Text('Tambah'),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 20),
