@@ -47,42 +47,8 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
     {"code": "DSG01", "title": "UI/UX Design & Prototyping", "status": "planned", "credits": 2},
   ];
 
-  // TAHAP 6: instance CourseProvider tidak lagi dibuat di sini,
-  // tetapi disediakan oleh ChangeNotifierProvider di main().
-  late final CourseProvider _courseProvider;
-
-  // TAHAP 4: ValueNotifier untuk nilai sederhana yang bisa dipantau.
-  late final ValueNotifier<int> _favoriteCount =
-      ValueNotifier<int>(_courseProvider.favorites.length);
-  final ValueNotifier<int> _demoCounter = ValueNotifier<int>(0);
-
-  @override
-  void initState() {
-    super.initState();
-    _courseProvider = context.read<CourseProvider>();
-    _courseProvider.addListener(_onCourseProviderChanged);
-  }
-
-  void _onCourseProviderChanged() {
-    setState(() {}); // bangun ulang UI karena state berubah
-    _favoriteCount.value = _courseProvider.favorites.length;
-  }
-
-  @override
-  void dispose() {
-    _courseProvider.removeListener(_onCourseProviderChanged);
-    // CourseProvider di-dispose otomatis oleh ChangeNotifierProvider
-    _favoriteCount.dispose();
-    _demoCounter.dispose();
-    super.dispose();
-  }
-
-  // TAHAP 2: state favorites dimiliki parent (ResponsiveShell).
-  // Child hanya mengubahnya lewat callback ini.
-  void _toggleFavorite(int index) {
-    // notifyListeners() dipanggil di dalam CourseProvider.toggleFavorite()
-    _courseProvider.toggleFavorite(_courses[index]['code'] as String);
-  }
+  // TAHAP 7: shell tidak lagi memegang/mendengarkan state favorites.
+  // Setiap widget yang butuh state membacanya langsung dari Provider.
 
   @override
   Widget build(BuildContext context) {
@@ -90,18 +56,12 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
       HomePage(
         studentId: studentId,
         studentName: studentName,
-        courses: _courses, // data dikirim lewat constructor (child 1)
-        onToggleFavorite: _toggleFavorite, // callback child -> parent
-        favoriteCount: _favoriteCount,
-        demoCounter: _demoCounter,
-        courseProvider: _courseProvider,
+        courses: _courses,
       ),
       CoursesPage(
         courses: _courses,
         studentId: studentId,
         studentName: studentName,
-        onToggleFavorite: _toggleFavorite, // data + callback (child 2)
-        courseProvider: _courseProvider,
       ),
       ProfilePage(studentId: studentId, studentName: studentName),
     ];
@@ -150,20 +110,12 @@ class HomePage extends StatelessWidget {
   final String studentId;
   final String studentName;
   final List<Map<String, dynamic>> courses;
-  final void Function(int index) onToggleFavorite;
-  final ValueNotifier<int> favoriteCount;
-  final ValueNotifier<int> demoCounter;
-  final CourseProvider courseProvider;
 
   const HomePage({
     super.key,
     required this.studentId,
     required this.studentName,
     required this.courses,
-    required this.onToggleFavorite,
-    required this.favoriteCount,
-    required this.demoCounter,
-    required this.courseProvider,
   });
 
   @override
@@ -206,63 +158,58 @@ class HomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+            // TAHAP 7: watch() dipakai di widget kecil ini untuk jumlah favorite
+            const FavoriteSummaryCard(),
+            const SizedBox(height: 20),
+            // TAHAP 7: Consumer membatasi rebuild hanya pada daftar favorit
+            Consumer<CourseProvider>(
+              builder: (context, provider, child) {
+                debugPrint('Consumer daftar favorit rebuild');
+                final favs = courses.where((c) => provider.isFavorite(c['code'])).toList();
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Eksperimen ValueNotifier', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    // Hanya widget ini yang rebuild saat favoriteCount berubah
-                    ValueListenableBuilder<int>(
-                      valueListenable: favoriteCount,
-                      builder: (context, value, child) => Text('Jumlah favorite: $value'),
+                    Text(
+                      'Course Favorit (${favs.length})',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
-                    // Counter demo: berubah tanpa setState() pada parent
-                    ValueListenableBuilder<int>(
-                      valueListenable: demoCounter,
-                      builder: (context, value, child) {
-                        debugPrint('ValueListenableBuilder rebuild: $value');
-                        return Row(
-                          children: [
-                            Text('Counter: $value'),
-                            const SizedBox(width: 12),
-                            ElevatedButton(
-                              onPressed: () => demoCounter.value++,
-                              child: const Text('Tambah'),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                    if (favs.isEmpty) const Text('Belum ada course favorit.'),
+                    for (final c in favs)
+                      Card(
+                        child: ListTile(
+                          title: Text(c['title']),
+                          subtitle: Text(c['code']),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.favorite, color: Colors.red),
+                            // read(): hanya memanggil aksi, tanpa listen
+                            onPressed: () => context.read<CourseProvider>().toggleFavorite(c['code']),
+                          ),
+                        ),
+                      ),
                   ],
-                ),
-              ),
+                );
+              },
             ),
-            const SizedBox(height: 20),
-            Text(
-              'Course Favorit (${courseProvider.favorites.length})',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            if (courseProvider.favorites.isEmpty)
-              const Text('Belum ada course favorit.'),
-            for (int i = 0; i < courses.length; i++)
-              if (courseProvider.isFavorite(courses[i]['code']))
-                Card(
-                  child: ListTile(
-                    title: Text(courses[i]['title']),
-                    subtitle: Text(courses[i]['code']),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.favorite, color: Colors.red),
-                      onPressed: () => onToggleFavorite(i),
-                    ),
-                  ),
-                ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class FavoriteSummaryCard extends StatelessWidget {
+  const FavoriteSummaryCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // watch(): widget ini rebuild setiap favorites berubah
+    final provider = context.watch<CourseProvider>();
+    debugPrint('FavoriteSummaryCard rebuild');
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.favorite, color: Colors.red),
+        title: Text('Jumlah favorite: ${provider.favorites.length}'),
       ),
     );
   }
@@ -272,11 +219,8 @@ class CoursesPage extends StatelessWidget {
   final List<Map<String, dynamic>> courses;
   final String studentId;
   final String studentName;
-  final void Function(int index) onToggleFavorite;
 
-  final CourseProvider courseProvider;
-
-  const CoursesPage({super.key, required this.courses, required this.studentId, required this.studentName, required this.onToggleFavorite, required this.courseProvider});
+  const CoursesPage({super.key, required this.courses, required this.studentId, required this.studentName});
 
   int _getCrossAxisCount(double width) {
     if (width < 600) return 1;
@@ -286,6 +230,9 @@ class CoursesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // watch(): daftar course dibangun ulang saat favorites berubah
+    final provider = context.watch<CourseProvider>();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Daftar Courses')),
       body: LayoutBuilder(
@@ -312,8 +259,9 @@ class CoursesPage extends StatelessWidget {
                       // Ia hanya menerima nilai (isFavorite) dan mengirim aksi (callback).
                       return CourseCard(
                         course: course,
-                        isFavorite: courseProvider.isFavorite(course['code']),
-                        onFavoriteChanged: () => onToggleFavorite(index),
+                        isFavorite: provider.isFavorite(course['code']),
+                        // read(): hanya memanggil aksi di dalam callback
+                        onFavoriteChanged: () => context.read<CourseProvider>().toggleFavorite(course['code']),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -322,8 +270,6 @@ class CoursesPage extends StatelessWidget {
                                 course: course,
                                 studentId: studentId,
                                 studentName: studentName,
-                                onFavoriteChanged: () => onToggleFavorite(index),
-                                courseProvider: courseProvider,
                               ),
                             ),
                           );
@@ -406,16 +352,12 @@ class CourseDetailPage extends StatefulWidget {
   final Map<String, dynamic> course;
   final String studentId;
   final String studentName;
-  final VoidCallback onFavoriteChanged;
-  final CourseProvider courseProvider;
 
   const CourseDetailPage({
     super.key,
     required this.course,
     required this.studentId,
     required this.studentName,
-    required this.onFavoriteChanged,
-    required this.courseProvider,
   });
 
   @override
@@ -430,8 +372,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   @override
   Widget build(BuildContext context) {
     final course = widget.course;
-    // Dibaca langsung dari sumber yang sama (_courses di parent), bukan salinan.
-    final isFav = widget.courseProvider.isFavorite(course['code']);
+    // watch(): halaman detail ikut berubah saat favorite diubah dari mana pun
+    final isFav = context.watch<CourseProvider>().isFavorite(course['code']);
 
     return Scaffold(
       appBar: AppBar(title: Text(course['title'])),
@@ -445,10 +387,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             Text('Judul: ${course['title']}', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
             OutlinedButton.icon(
-              onPressed: () {
-                widget.onFavoriteChanged(); // ubah state di parent
-                setState(() {}); // route detail berada di luar shell, jadi perlu rebuild sendiri
-              },
+              onPressed: () => context.read<CourseProvider>().toggleFavorite(course['code']),
               icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? Colors.red : Colors.grey),
               label: Text(isFav ? 'Hapus dari favorit' : 'Tambah ke favorit'),
             ),
