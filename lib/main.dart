@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
-import 'course_state.dart';
+import 'package:provider/provider.dart';
+import 'course_provider.dart';
 
 const String studentName = 'Ni Komang Laksmi Kaori';
 const String studentId = '2415051033';
 
 void main() {
-  runApp(const CourseExplorerApp());
+  runApp(
+    // TAHAP 6: menyediakan CourseProvider ke seluruh widget di bawahnya
+    ChangeNotifierProvider(
+      create: (_) => CourseProvider(initialFavorites: {'MOB02'}),
+      child: const CourseExplorerApp(),
+    ),
+  );
 }
 
 class CourseExplorerApp extends StatelessWidget {
@@ -33,42 +40,38 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   int _selectedIndex = 0;
 
   final List<Map<String, dynamic>> _courses = [
-    {"code": "MOB01", "title": "Git & GitHub", "status": "done", "credits": 2, "isFav": false},
-    {"code": "MOB02", "title": "Dart Fundamentals", "status": "done", "credits": 2, "isFav": true},
-    {"code": "MOB03", "title": "Flutter UI Fundamentals", "status": "active", "credits": 3, "isFav": false},
-    {"code": "WEB01", "title": "Laravel Web Development", "status": "planned", "credits": 3, "isFav": false},
-    {"code": "DSG01", "title": "UI/UX Design & Prototyping", "status": "planned", "credits": 2, "isFav": false},
+    {"code": "MOB01", "title": "Git & GitHub", "status": "done", "credits": 2},
+    {"code": "MOB02", "title": "Dart Fundamentals", "status": "done", "credits": 2},
+    {"code": "MOB03", "title": "Flutter UI Fundamentals", "status": "active", "credits": 3},
+    {"code": "WEB01", "title": "Laravel Web Development", "status": "planned", "credits": 3},
+    {"code": "DSG01", "title": "UI/UX Design & Prototyping", "status": "planned", "credits": 2},
   ];
 
-  // TAHAP 5: state favorites dipindahkan ke class terpisah (ChangeNotifier).
-  // Nilai isFav pada _courses sekarang hanya dipakai sebagai data awal.
-  late final CourseState _courseState = CourseState(
-    initialFavorites: _courses
-        .where((c) => c['isFav'] == true)
-        .map((c) => c['code'] as String)
-        .toSet(),
-  );
+  // TAHAP 6: instance CourseProvider tidak lagi dibuat di sini,
+  // tetapi disediakan oleh ChangeNotifierProvider di main().
+  late final CourseProvider _courseProvider;
 
   // TAHAP 4: ValueNotifier untuk nilai sederhana yang bisa dipantau.
   late final ValueNotifier<int> _favoriteCount =
-      ValueNotifier<int>(_courseState.favorites.length);
+      ValueNotifier<int>(_courseProvider.favorites.length);
   final ValueNotifier<int> _demoCounter = ValueNotifier<int>(0);
 
   @override
   void initState() {
     super.initState();
-    _courseState.addListener(_onCourseStateChanged);
+    _courseProvider = context.read<CourseProvider>();
+    _courseProvider.addListener(_onCourseProviderChanged);
   }
 
-  void _onCourseStateChanged() {
+  void _onCourseProviderChanged() {
     setState(() {}); // bangun ulang UI karena state berubah
-    _favoriteCount.value = _courseState.favorites.length;
+    _favoriteCount.value = _courseProvider.favorites.length;
   }
 
   @override
   void dispose() {
-    _courseState.removeListener(_onCourseStateChanged);
-    _courseState.dispose();
+    _courseProvider.removeListener(_onCourseProviderChanged);
+    // CourseProvider di-dispose otomatis oleh ChangeNotifierProvider
     _favoriteCount.dispose();
     _demoCounter.dispose();
     super.dispose();
@@ -77,8 +80,8 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   // TAHAP 2: state favorites dimiliki parent (ResponsiveShell).
   // Child hanya mengubahnya lewat callback ini.
   void _toggleFavorite(int index) {
-    // notifyListeners() dipanggil di dalam CourseState.toggleFavorite()
-    _courseState.toggleFavorite(_courses[index]['code'] as String);
+    // notifyListeners() dipanggil di dalam CourseProvider.toggleFavorite()
+    _courseProvider.toggleFavorite(_courses[index]['code'] as String);
   }
 
   @override
@@ -91,14 +94,14 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
         onToggleFavorite: _toggleFavorite, // callback child -> parent
         favoriteCount: _favoriteCount,
         demoCounter: _demoCounter,
-        courseState: _courseState,
+        courseProvider: _courseProvider,
       ),
       CoursesPage(
         courses: _courses,
         studentId: studentId,
         studentName: studentName,
         onToggleFavorite: _toggleFavorite, // data + callback (child 2)
-        courseState: _courseState,
+        courseProvider: _courseProvider,
       ),
       ProfilePage(studentId: studentId, studentName: studentName),
     ];
@@ -150,7 +153,7 @@ class HomePage extends StatelessWidget {
   final void Function(int index) onToggleFavorite;
   final ValueNotifier<int> favoriteCount;
   final ValueNotifier<int> demoCounter;
-  final CourseState courseState;
+  final CourseProvider courseProvider;
 
   const HomePage({
     super.key,
@@ -160,7 +163,7 @@ class HomePage extends StatelessWidget {
     required this.onToggleFavorite,
     required this.favoriteCount,
     required this.demoCounter,
-    required this.courseState,
+    required this.courseProvider,
   });
 
   @override
@@ -240,14 +243,14 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Course Favorit (${courseState.favorites.length})',
+              'Course Favorit (${courseProvider.favorites.length})',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            if (courseState.favorites.isEmpty)
+            if (courseProvider.favorites.isEmpty)
               const Text('Belum ada course favorit.'),
             for (int i = 0; i < courses.length; i++)
-              if (courseState.isFavorite(courses[i]['code']))
+              if (courseProvider.isFavorite(courses[i]['code']))
                 Card(
                   child: ListTile(
                     title: Text(courses[i]['title']),
@@ -271,9 +274,9 @@ class CoursesPage extends StatelessWidget {
   final String studentName;
   final void Function(int index) onToggleFavorite;
 
-  final CourseState courseState;
+  final CourseProvider courseProvider;
 
-  const CoursesPage({super.key, required this.courses, required this.studentId, required this.studentName, required this.onToggleFavorite, required this.courseState});
+  const CoursesPage({super.key, required this.courses, required this.studentId, required this.studentName, required this.onToggleFavorite, required this.courseProvider});
 
   int _getCrossAxisCount(double width) {
     if (width < 600) return 1;
@@ -309,7 +312,7 @@ class CoursesPage extends StatelessWidget {
                       // Ia hanya menerima nilai (isFavorite) dan mengirim aksi (callback).
                       return CourseCard(
                         course: course,
-                        isFavorite: courseState.isFavorite(course['code']),
+                        isFavorite: courseProvider.isFavorite(course['code']),
                         onFavoriteChanged: () => onToggleFavorite(index),
                         onTap: () {
                           Navigator.push(
@@ -320,7 +323,7 @@ class CoursesPage extends StatelessWidget {
                                 studentId: studentId,
                                 studentName: studentName,
                                 onFavoriteChanged: () => onToggleFavorite(index),
-                                courseState: courseState,
+                                courseProvider: courseProvider,
                               ),
                             ),
                           );
@@ -404,7 +407,7 @@ class CourseDetailPage extends StatefulWidget {
   final String studentId;
   final String studentName;
   final VoidCallback onFavoriteChanged;
-  final CourseState courseState;
+  final CourseProvider courseProvider;
 
   const CourseDetailPage({
     super.key,
@@ -412,7 +415,7 @@ class CourseDetailPage extends StatefulWidget {
     required this.studentId,
     required this.studentName,
     required this.onFavoriteChanged,
-    required this.courseState,
+    required this.courseProvider,
   });
 
   @override
@@ -428,7 +431,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   Widget build(BuildContext context) {
     final course = widget.course;
     // Dibaca langsung dari sumber yang sama (_courses di parent), bukan salinan.
-    final isFav = widget.courseState.isFavorite(course['code']);
+    final isFav = widget.courseProvider.isFavorite(course['code']);
 
     return Scaffold(
       appBar: AppBar(title: Text(course['title'])),
