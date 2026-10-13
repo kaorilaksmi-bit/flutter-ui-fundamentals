@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'course_provider.dart';
 import 'models/course.dart';
+import 'services/course_service.dart';
 
 const String studentName = 'Ni Komang Laksmi Kaori';
 const String studentId = '2415051033';
@@ -52,6 +53,22 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   // TAHAP 8: setiap Map JSON diubah menjadi object Course bertipe jelas
   late final List<Course> _courses =
       _coursesJson.map((json) => Course.fromJson(json)).toList();
+
+  // TAHAP 9: pengujian sementara CourseService lewat debugPrint.
+  // (UI belum memakai service; ini baru dihubungkan pada tahap berikutnya.)
+  @override
+  void initState() {
+    super.initState();
+    _testCourseService();
+  }
+
+  Future<void> _testCourseService() async {
+    final courses = await CourseService().loadCourses();
+    debugPrint('CourseService memuat ${courses.length} course');
+    for (final c in courses) {
+      debugPrint('SERVICE: ${c.code} - ${c.title} (${c.credits} SKS, ${c.status})');
+    }
+  }
 
   // TAHAP 7: shell tidak lagi memegang/mendengarkan state favorites.
   // Setiap widget yang butuh state membacanya langsung dari Provider.
