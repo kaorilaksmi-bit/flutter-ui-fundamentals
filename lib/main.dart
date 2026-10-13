@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'course_provider.dart';
+import 'models/course.dart';
 
 const String studentName = 'Ni Komang Laksmi Kaori';
 const String studentId = '2415051033';
@@ -39,13 +40,18 @@ class ResponsiveShell extends StatefulWidget {
 class _ResponsiveShellState extends State<ResponsiveShell> {
   int _selectedIndex = 0;
 
-  final List<Map<String, dynamic>> _courses = [
+  // Data mentah berbentuk JSON (Map)
+  final List<Map<String, dynamic>> _coursesJson = [
     {"code": "MOB01", "title": "Git & GitHub", "status": "done", "credits": 2},
     {"code": "MOB02", "title": "Dart Fundamentals", "status": "done", "credits": 2},
     {"code": "MOB03", "title": "Flutter UI Fundamentals", "status": "active", "credits": 3},
     {"code": "WEB01", "title": "Laravel Web Development", "status": "planned", "credits": 3},
     {"code": "DSG01", "title": "UI/UX Design & Prototyping", "status": "planned", "credits": 2},
   ];
+
+  // TAHAP 8: setiap Map JSON diubah menjadi object Course bertipe jelas
+  late final List<Course> _courses =
+      _coursesJson.map((json) => Course.fromJson(json)).toList();
 
   // TAHAP 7: shell tidak lagi memegang/mendengarkan state favorites.
   // Setiap widget yang butuh state membacanya langsung dari Provider.
@@ -109,7 +115,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
 class HomePage extends StatelessWidget {
   final String studentId;
   final String studentName;
-  final List<Map<String, dynamic>> courses;
+  final List<Course> courses;
 
   const HomePage({
     super.key,
@@ -165,7 +171,7 @@ class HomePage extends StatelessWidget {
             Consumer<CourseProvider>(
               builder: (context, provider, child) {
                 debugPrint('Consumer daftar favorit rebuild');
-                final favs = courses.where((c) => provider.isFavorite(c['code'])).toList();
+                final favs = courses.where((c) => provider.isFavorite(c.code)).toList();
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -178,12 +184,12 @@ class HomePage extends StatelessWidget {
                     for (final c in favs)
                       Card(
                         child: ListTile(
-                          title: Text(c['title']),
-                          subtitle: Text(c['code']),
+                          title: Text(c.title),
+                          subtitle: Text(c.code),
                           trailing: IconButton(
                             icon: const Icon(Icons.favorite, color: Colors.red),
                             // read(): hanya memanggil aksi, tanpa listen
-                            onPressed: () => context.read<CourseProvider>().toggleFavorite(c['code']),
+                            onPressed: () => context.read<CourseProvider>().toggleFavorite(c.code),
                           ),
                         ),
                       ),
@@ -216,7 +222,7 @@ class FavoriteSummaryCard extends StatelessWidget {
 }
 
 class CoursesPage extends StatelessWidget {
-  final List<Map<String, dynamic>> courses;
+  final List<Course> courses;
   final String studentId;
   final String studentName;
 
@@ -259,9 +265,9 @@ class CoursesPage extends StatelessWidget {
                       // Ia hanya menerima nilai (isFavorite) dan mengirim aksi (callback).
                       return CourseCard(
                         course: course,
-                        isFavorite: provider.isFavorite(course['code']),
+                        isFavorite: provider.isFavorite(course.code),
                         // read(): hanya memanggil aksi di dalam callback
-                        onFavoriteChanged: () => context.read<CourseProvider>().toggleFavorite(course['code']),
+                        onFavoriteChanged: () => context.read<CourseProvider>().toggleFavorite(course.code),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -288,7 +294,7 @@ class CoursesPage extends StatelessWidget {
 }
 
 class CourseCard extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final Course course;
   final bool isFavorite;
   final VoidCallback onFavoriteChanged;
   final VoidCallback onTap;
@@ -318,7 +324,7 @@ class CourseCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(course['code'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                  Text(course.code, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
                   IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -333,13 +339,13 @@ class CourseCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                course['title'],
+                course.title,
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              Text('Status: ${course['status']}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              Text('Status: ${course.status}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
             ],
           ),
         ),
@@ -349,7 +355,7 @@ class CourseCard extends StatelessWidget {
 }
 
 class CourseDetailPage extends StatefulWidget {
-  final Map<String, dynamic> course;
+  final Course course;
   final String studentId;
   final String studentName;
 
@@ -373,10 +379,10 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   Widget build(BuildContext context) {
     final course = widget.course;
     // watch(): halaman detail ikut berubah saat favorite diubah dari mana pun
-    final isFav = context.watch<CourseProvider>().isFavorite(course['code']);
+    final isFav = context.watch<CourseProvider>().isFavorite(course.code);
 
     return Scaffold(
-      appBar: AppBar(title: Text(course['title'])),
+      appBar: AppBar(title: Text(course.title)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -384,10 +390,10 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           children: [
             Text('${widget.studentId} - ${widget.studentName}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
             const Divider(height: 30),
-            Text('Judul: ${course['title']}', style: const TextStyle(fontSize: 16)),
+            Text('Judul: ${course.title}', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
             OutlinedButton.icon(
-              onPressed: () => context.read<CourseProvider>().toggleFavorite(course['code']),
+              onPressed: () => context.read<CourseProvider>().toggleFavorite(course.code),
               icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? Colors.red : Colors.grey),
               label: Text(isFav ? 'Hapus dari favorit' : 'Tambah ke favorit'),
             ),
@@ -401,11 +407,11 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
               label: Text(_showDetail ? 'Sembunyikan detail' : 'Tampilkan detail'),
             ),
             if (_showDetail) ...[
-              Text('Kode Mata Kuliah: ${course['code']}', style: const TextStyle(fontSize: 16)),
+              Text('Kode Mata Kuliah: ${course.code}', style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 8),
-              Text('Jumlah SKS: ${course['credits']}', style: const TextStyle(fontSize: 16)),
+              Text('Jumlah SKS: ${course.credits}', style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 8),
-              Text('Status: ${course['status']}', style: const TextStyle(fontSize: 16)),
+              Text('Status: ${course.status}', style: const TextStyle(fontSize: 16)),
             ],
           ],
         ),
