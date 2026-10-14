@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import 'models/course.dart';
-import 'repositories/course_repository.dart';
+import '../models/course.dart';
+import '../repositories/course_repository.dart';
 
 class CourseProvider extends ChangeNotifier {
   // TAHAP 10: Provider hanya mengenal repository, bukan rootBundle/service.
