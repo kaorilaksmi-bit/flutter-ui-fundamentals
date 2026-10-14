@@ -41,6 +41,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             const Divider(height: 30),
             Text('Judul: ${course.title}', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
+            // TAHAP 13: status favorit ditampilkan di halaman detail
+            Text('Status favorit: ${isFav ? "Favorit" : "Bukan favorit"}', style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () => context.read<CourseProvider>().toggleFavorite(course.code),
               icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? Colors.red : Colors.grey),
