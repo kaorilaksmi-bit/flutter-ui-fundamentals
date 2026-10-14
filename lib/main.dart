@@ -46,18 +46,8 @@ class ResponsiveShell extends StatefulWidget {
 class _ResponsiveShellState extends State<ResponsiveShell> {
   int _selectedIndex = 0;
 
-  // Data mentah berbentuk JSON (Map)
-  final List<Map<String, dynamic>> _coursesJson = [
-    {"code": "MOB01", "title": "Git & GitHub", "status": "done", "credits": 2},
-    {"code": "MOB02", "title": "Dart Fundamentals", "status": "done", "credits": 2},
-    {"code": "MOB03", "title": "Flutter UI Fundamentals", "status": "active", "credits": 3},
-    {"code": "WEB01", "title": "Laravel Web Development", "status": "planned", "credits": 3},
-    {"code": "DSG01", "title": "UI/UX Design & Prototyping", "status": "planned", "credits": 2},
-  ];
-
-  // TAHAP 8: setiap Map JSON diubah menjadi object Course bertipe jelas
-  late final List<Course> _courses =
-      _coursesJson.map((json) => Course.fromJson(json)).toList();
+  // TAHAP 11: data course tidak lagi ditulis di sini.
+  // Daftar course, status loading, dan error diambil dari CourseProvider.
 
   // TAHAP 7: shell tidak lagi memegang/mendengarkan state favorites.
   // Setiap widget yang butuh state membacanya langsung dari Provider.
@@ -68,10 +58,8 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
       HomePage(
         studentId: studentId,
         studentName: studentName,
-        courses: _courses,
       ),
       CoursesPage(
-        courses: _courses,
         studentId: studentId,
         studentName: studentName,
       ),
@@ -121,13 +109,11 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
 class HomePage extends StatelessWidget {
   final String studentId;
   final String studentName;
-  final List<Course> courses;
 
   const HomePage({
     super.key,
     required this.studentId,
     required this.studentName,
-    required this.courses,
   });
 
   @override
@@ -177,7 +163,10 @@ class HomePage extends StatelessWidget {
             Consumer<CourseProvider>(
               builder: (context, provider, child) {
                 debugPrint('Consumer daftar favorit rebuild');
-                final favs = courses.where((c) => provider.isFavorite(c.code)).toList();
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final favs = provider.courses.where((c) => provider.isFavorite(c.code)).toList();
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -228,11 +217,10 @@ class FavoriteSummaryCard extends StatelessWidget {
 }
 
 class CoursesPage extends StatelessWidget {
-  final List<Course> courses;
   final String studentId;
   final String studentName;
 
-  const CoursesPage({super.key, required this.courses, required this.studentId, required this.studentName});
+  const CoursesPage({super.key, required this.studentId, required this.studentName});
 
   int _getCrossAxisCount(double width) {
     if (width < 600) return 1;
@@ -244,6 +232,34 @@ class CoursesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // watch(): daftar course dibangun ulang saat favorites berubah
     final provider = context.watch<CourseProvider>();
+
+    // TAHAP 11: UI hanya membaca state, tidak mengurus cara mengambil data
+    if (provider.isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Daftar Courses')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (provider.error != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Daftar Courses')),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 12),
+              Text('Terjadi kesalahan:\n${provider.error}', textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => context.read<CourseProvider>().loadCourses(),
+                child: const Text('Coba lagi'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Daftar Courses')),
@@ -264,9 +280,9 @@ class CoursesPage extends StatelessWidget {
                       mainAxisSpacing: 12,
                       childAspectRatio: 2.2,
                     ),
-                    itemCount: courses.length,
+                    itemCount: provider.courses.length,
                     itemBuilder: (context, index) {
-                      final course = courses[index];
+                      final course = provider.courses[index];
                       // TAHAP 3: CourseCard tidak menyimpan state favorite.
                       // Ia hanya menerima nilai (isFavorite) dan mengirim aksi (callback).
                       return CourseCard(

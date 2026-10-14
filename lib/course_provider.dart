@@ -10,8 +10,10 @@ class CourseProvider extends ChangeNotifier {
 
   final CourseRepository repository;
 
-  /// Daftar course hasil pemanggilan repository.
+  /// TAHAP 11: tiga state async dalam satu state holder.
   List<Course> courses = [];
+  bool isLoading = false;
+  String? error;
 
   /// Kumpulan kode course yang menjadi favorit.
   final Set<String> favorites;
@@ -28,12 +30,17 @@ class CourseProvider extends ChangeNotifier {
   }
 
   Future<void> loadCourses() async {
-    courses = await repository.getCourses();
-    // Pengujian sementara (UI baru memakai data ini di tahap berikutnya)
-    debugPrint('PROVIDER: ${courses.length} course dimuat lewat repository');
-    for (final c in courses) {
-      debugPrint('PROVIDER: ${c.code} - ${c.title}');
-    }
+    isLoading = true;
+    error = null;
     notifyListeners();
+
+    try {
+      courses = await repository.getCourses();
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }
