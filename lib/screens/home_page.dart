@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
-import '../widgets/favorite_summary_card.dart';
+import '../widgets/summary_cards.dart';
 
 class HomePage extends StatelessWidget {
   final String studentId;
@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Course Explorer')),
+      appBar: AppBar(title: const Text('Course Explorer v2')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -53,8 +53,8 @@ class HomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            // TAHAP 7: watch() dipakai di widget kecil ini untuk jumlah favorite
-            const FavoriteSummaryCard(),
+            // TAHAP 14: ringkasan jumlah Courses dan Favorites (watch pada Provider)
+            const SummaryCards(),
             const SizedBox(height: 20),
             // TAHAP 7: Consumer membatasi rebuild hanya pada daftar favorit
             Consumer<CourseProvider>(
