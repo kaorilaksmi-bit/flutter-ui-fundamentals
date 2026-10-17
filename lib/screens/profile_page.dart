@@ -49,6 +49,8 @@ class _ProfilePageState extends State<ProfilePage> {
       if (confirm == true) {
         setState(() => _isLoading = true);
         await Future.delayed(const Duration(seconds: 2));
+        // TAHAP 15 Kasus D: periksa mounted sebelum setState setelah proses async
+        if (!mounted) return;
         setState(() => _isLoading = false);
 
         if (mounted) {
