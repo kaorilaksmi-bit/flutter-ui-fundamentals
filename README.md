@@ -39,3 +39,27 @@ Screen / Widget  ->  Provider  ->  Repository  ->  Service / Data Source
 | `CourseService` mengandung widget/UI | Tidak ada. Tidak mengimpor `flutter/material`. |
 | Provider menyimpan `BuildContext` sebagai state | Tidak ada. |
 | Screen/widget mengimpor service atau repository langsung | Tidak ada. |
+
+## Catatan Endpoint REST (Pertemuan 7)
+
+| Item | Keterangan |
+|---|---|
+| URL endpoint | https://jsonplaceholder.typicode.com/posts/1 |
+| HTTP method | GET |
+| Status code | 200 |
+| Resource | posts |
+
+Contoh response body:
+
+```json
+{
+  "userId": 1,
+  "id": 1,
+  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+  "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
+}
+```
+
+Field yang ditemukan: `userId`, `id`, `title`, `body`.
+
+Catatan: JSONPlaceholder hanya mensimulasikan operasi tulis (POST/PUT/DELETE), sehingga data tidak benar-benar tersimpan.
