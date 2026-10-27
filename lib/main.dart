@@ -3,13 +3,10 @@ import 'package:provider/provider.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/responsive_shell.dart';
-import 'services/api_experiment.dart';
+import 'screens/api_test_page.dart';
 import 'services/course_service.dart';
 
 void main() {
-  // TAHAP 2 (Pertemuan 7): uji HTTP GET sementara, hasil tampil di Debug Console
-  runApiExperiment();
-
   runApp(
     // TAHAP 6: menyediakan CourseProvider ke seluruh widget di bawahnya
     ChangeNotifierProvider(
@@ -32,6 +29,8 @@ class CourseExplorerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Course Explorer',
       theme: ThemeData(primarySwatch: Colors.blue),
+      // TAHAP 3 (Pertemuan 7): halaman sementara. Kembalikan ke ResponsiveShell() setelah screenshot.
+      // home: const ApiTestPage(),
       home: const ResponsiveShell(),
     );
   }
