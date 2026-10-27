@@ -15,6 +15,10 @@ class CourseProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
+  /// TAHAP 6 (P7): status penyimpanan agar tombol Simpan tidak bisa ditekan dua kali.
+  bool isSaving = false;
+  String? saveError;
+
   /// Kumpulan kode course yang menjadi favorit.
   final Set<String> favorites;
 
@@ -42,5 +46,28 @@ class CourseProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Membuat course baru lewat repository, lalu me-refresh daftar.
+  /// Mengembalikan true jika berhasil.
+  Future<bool> createCourse(Course course) async {
+    if (isSaving) return false; // cegah submit ganda
+    isSaving = true;
+    saveError = null;
+    notifyListeners();
+
+    try {
+      await repository.createCourse(course);
+    } catch (e) {
+      saveError = e.toString();
+      isSaving = false;
+      notifyListeners();
+      return false;
+    }
+
+    isSaving = false;
+    notifyListeners();
+    await loadCourses(); // mengganti isi list, bukan menambah
+    return true;
   }
 }

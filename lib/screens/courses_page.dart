@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import 'course_detail_page.dart';
+import 'course_form_page.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
 
@@ -15,6 +16,18 @@ class CoursesPage extends StatelessWidget {
     if (width < 600) return 1;
     if (width < 840) return 2;
     return 3;
+  }
+
+  // TAHAP 6 (P7): tombol menuju form tambah course
+  Widget _addButton(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const CourseFormPage()),
+      ),
+      icon: const Icon(Icons.add),
+      label: const Text('Tambah Course'),
+    );
   }
 
   @override
@@ -43,11 +56,13 @@ class CoursesPage extends StatelessWidget {
       return Scaffold(
         appBar: AppBar(title: const Text('Daftar Courses')),
         body: const Center(child: Text('Data course belum tersedia')),
+        floatingActionButton: _addButton(context),
       );
     }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Daftar Courses')),
+      floatingActionButton: _addButton(context),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return Padding(
