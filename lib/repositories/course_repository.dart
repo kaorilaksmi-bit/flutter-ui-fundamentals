@@ -1,14 +1,14 @@
 import '../models/course.dart';
-import '../services/course_service.dart';
+import '../services/course_api_service.dart';
 
-/// TAHAP 10: Repository menyediakan API data bagi Provider.
-/// Provider tidak perlu tahu data berasal dari JSON, API, atau database.
+/// TAHAP 4 (Pertemuan 7): dependency diganti dari CourseService
+/// menjadi CourseApiService; loadCourses() menjadi getCourses().
 class CourseRepository {
-  final CourseService service;
+  final CourseApiService service;
 
   CourseRepository(this.service);
 
   Future<List<Course>> getCourses() {
-    return service.loadCourses();
+    return service.getCourses();
   }
 }

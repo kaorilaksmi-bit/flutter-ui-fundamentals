@@ -3,8 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/responsive_shell.dart';
-import 'screens/api_test_page.dart';
-import 'services/course_service.dart';
+import 'services/course_api_service.dart';
 
 void main() {
   runApp(
@@ -12,8 +11,9 @@ void main() {
     ChangeNotifierProvider(
       // TAHAP 10: Service -> Repository -> Provider
       create: (_) => CourseProvider(
-        CourseRepository(CourseService()),
-        initialFavorites: {'MOB02'},
+        // TAHAP 4 (P7): sumber data diganti ke REST API
+        CourseRepository(CourseApiService('https://jsonplaceholder.typicode.com')),
+        initialFavorites: {'POST-2'},
       )..loadCourses(),
       child: const CourseExplorerApp(),
     ),
@@ -29,8 +29,6 @@ class CourseExplorerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Course Explorer',
       theme: ThemeData(primarySwatch: Colors.blue),
-      // TAHAP 3 (Pertemuan 7): halaman sementara. Kembalikan ke ResponsiveShell() setelah screenshot.
-      // home: const ApiTestPage(),
       home: const ResponsiveShell(),
     );
   }
