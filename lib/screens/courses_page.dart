@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import 'course_detail_page.dart';
 import '../widgets/course_card.dart';
+import '../widgets/error_view.dart';
 
 class CoursesPage extends StatelessWidget {
   final String studentId;
@@ -21,7 +22,8 @@ class CoursesPage extends StatelessWidget {
     // watch(): daftar course dibangun ulang saat favorites berubah
     final provider = context.watch<CourseProvider>();
 
-    // TAHAP 11: UI hanya membaca state, tidak mengurus cara mengambil data
+    // TAHAP 5 (P7): empat state async: loading, error, empty, success.
+    // UI hanya membaca state, tidak mengurus cara mengambil data.
     if (provider.isLoading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Daftar Courses')),
@@ -31,21 +33,16 @@ class CoursesPage extends StatelessWidget {
     if (provider.error != null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Daftar Courses')),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 12),
-              Text('Terjadi kesalahan:\n${provider.error}', textAlign: TextAlign.center),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () => context.read<CourseProvider>().loadCourses(),
-                child: const Text('Coba lagi'),
-              ),
-            ],
-          ),
+        body: ErrorView(
+          message: provider.error!,
+          onRetry: provider.loadCourses,
         ),
+      );
+    }
+    if (provider.courses.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Daftar Courses')),
+        body: const Center(child: Text('Data course belum tersedia')),
       );
     }
 
