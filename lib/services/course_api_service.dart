@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
+import 'course_data_source.dart';
 
 /// TAHAP 4 (Pertemuan 7): service yang berkomunikasi dengan backend REST.
 /// Screen tidak lagi berisi detail request HTTP.
-class CourseApiService {
+/// TAHAP 9 (P7): mengimplementasikan kontrak CourseDataSource.
+class CourseApiService implements CourseDataSource {
   CourseApiService(this.baseUrl);
 
   final String baseUrl;
@@ -15,6 +17,7 @@ class CourseApiService {
   // Ganti menjadi 'courses' jika memakai endpoint yang berbentuk course.
   static const String resource = 'posts';
 
+  @override
   Future<List<Course>> getCourses() async {
     final response = await http.get(Uri.parse('$baseUrl/$resource'));
 
@@ -30,6 +33,7 @@ class CourseApiService {
   }
 
   /// TAHAP 6 (P7): HTTP POST untuk membuat resource baru.
+  @override
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/$resource'),
@@ -47,6 +51,7 @@ class CourseApiService {
   }
 
   /// TAHAP 7 (P7): HTTP PUT untuk memperbarui resource (penggantian penuh).
+  @override
   Future<void> updateCourse(int id, Course course) async {
     final response = await http.put(
       Uri.parse('$baseUrl/$resource/$id'),
@@ -60,6 +65,7 @@ class CourseApiService {
   }
 
   /// TAHAP 8 (P7): HTTP DELETE untuk menghapus resource.
+  @override
   Future<void> deleteCourse(int id) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/$resource/$id'),

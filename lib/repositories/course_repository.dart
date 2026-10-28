@@ -1,26 +1,20 @@
 import '../models/course.dart';
-import '../services/course_api_service.dart';
+import '../services/course_data_source.dart';
 
-/// TAHAP 4 (Pertemuan 7): dependency diganti dari CourseService
-/// menjadi CourseApiService; loadCourses() menjadi getCourses().
+/// TAHAP 9 (P7): repository hanya mengenal kontrak CourseDataSource,
+/// bukan implementasi konkret (REST, Supabase, dan lain-lain).
 class CourseRepository {
-  final CourseApiService service;
+  CourseRepository(this.dataSource);
 
-  CourseRepository(this.service);
+  final CourseDataSource dataSource;
 
-  Future<List<Course>> getCourses() {
-    return service.getCourses();
-  }
+  Future<List<Course>> getCourses() => dataSource.getCourses();
 
-  Future<Course> createCourse(Course course) {
-    return service.createCourse(course);
-  }
+  Future<Course> createCourse(Course course) =>
+      dataSource.createCourse(course);
 
-  Future<void> updateCourse(int id, Course course) {
-    return service.updateCourse(id, course);
-  }
+  Future<void> updateCourse(int id, Course course) =>
+      dataSource.updateCourse(id, course);
 
-  Future<void> deleteCourse(int id) {
-    return service.deleteCourse(id);
-  }
+  Future<void> deleteCourse(int id) => dataSource.deleteCourse(id);
 }
