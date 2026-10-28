@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import '../models/course.dart';
+import 'course_form_page.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final Course course;
@@ -26,12 +27,30 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final course = widget.course;
-    // watch(): halaman detail ikut berubah saat favorite diubah dari mana pun
-    final isFav = context.watch<CourseProvider>().isFavorite(course.code);
+    // watch(): halaman detail ikut berubah saat favorite atau data diubah
+    final provider = context.watch<CourseProvider>();
+    // Ambil data terbaru dari provider (setelah edit dan refresh)
+    final course = provider.courses.firstWhere(
+      (c) => c.code == widget.course.code,
+      orElse: () => widget.course,
+    );
+    final isFav = provider.isFavorite(course.code);
 
     return Scaffold(
-      appBar: AppBar(title: Text(course.title)),
+      appBar: AppBar(
+        title: Text(course.title),
+        actions: [
+          // TAHAP 7 (P7): tombol Edit
+          IconButton(
+            tooltip: 'Edit',
+            icon: const Icon(Icons.edit),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => CourseFormPage(course: course)),
+            ),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

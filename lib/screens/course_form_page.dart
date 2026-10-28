@@ -5,10 +5,13 @@ import '../constants/student_identity.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 
-/// TAHAP 6 (P7): form tambah course. Screen tidak memanggil package http;
+/// TAHAP 6-7 (P7): form tambah dan edit course. Screen tidak memanggil package http;
 /// data dikirim lewat CourseProvider -> CourseRepository -> CourseApiService.
 class CourseFormPage extends StatefulWidget {
-  const CourseFormPage({super.key});
+  /// Jika diisi, form berada pada mode edit.
+  final Course? course;
+
+  const CourseFormPage({super.key, this.course});
 
   @override
   State<CourseFormPage> createState() => _CourseFormPageState();
@@ -20,6 +23,21 @@ class _CourseFormPageState extends State<CourseFormPage> {
   final _titleController = TextEditingController();
   final _creditsController = TextEditingController();
   String _status = 'planned';
+
+  bool get _isEdit => widget.course != null;
+
+  @override
+  void initState() {
+    super.initState();
+    // TAHAP 7: isi form dengan data lama saat mode edit
+    final c = widget.course;
+    if (c != null) {
+      _codeController.text = c.code;
+      _titleController.text = c.title;
+      _creditsController.text = c.credits.toString();
+      _status = c.status;
+    }
+  }
 
   @override
   void dispose() {
@@ -42,7 +60,10 @@ class _CourseFormPageState extends State<CourseFormPage> {
       status: _status,
     );
 
-    final ok = await provider.createCourse(course);
+    // Mode edit memakai PUT, mode tambah memakai POST
+    final ok = _isEdit
+        ? await provider.updateCourse(widget.course!.id!, course)
+        : await provider.createCourse(course);
 
     // Setelah await, pastikan widget masih terpasang sebelum memakai context
     if (!context.mounted) return;
@@ -50,7 +71,9 @@ class _CourseFormPageState extends State<CourseFormPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          ok ? 'Course berhasil dibuat' : 'Gagal membuat course: ${provider.saveError}',
+          ok
+              ? (_isEdit ? 'Course berhasil diperbarui' : 'Course berhasil dibuat')
+              : 'Gagal menyimpan course: ${provider.saveError}',
         ),
       ),
     );
@@ -63,7 +86,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
     final isSaving = context.watch<CourseProvider>().isSaving;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Course')),
+      appBar: AppBar(title: Text(_isEdit ? 'Edit Course' : 'Tambah Course')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -78,7 +101,14 @@ class _CourseFormPageState extends State<CourseFormPage> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _codeController,
-                decoration: const InputDecoration(labelText: 'Kode', border: OutlineInputBorder()),
+                // Kode read-only saat edit karena dipakai sebagai kunci favorites
+                readOnly: _isEdit,
+                decoration: InputDecoration(
+                  labelText: 'Kode',
+                  border: const OutlineInputBorder(),
+                  helperText: _isEdit ? 'Kode tidak dapat diubah' : null,
+                  filled: _isEdit,
+                ),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Kode wajib diisi' : null,
               ),
               const SizedBox(height: 12),

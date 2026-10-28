@@ -70,4 +70,27 @@ class CourseProvider extends ChangeNotifier {
     await loadCourses(); // mengganti isi list, bukan menambah
     return true;
   }
+
+  /// TAHAP 7 (P7): memperbarui course (PUT), lalu me-refresh daftar.
+  /// Mengembalikan true jika berhasil.
+  Future<bool> updateCourse(int id, Course course) async {
+    if (isSaving) return false; // cegah submit ganda
+    isSaving = true;
+    saveError = null;
+    notifyListeners();
+
+    try {
+      await repository.updateCourse(id, course);
+    } catch (e) {
+      saveError = e.toString();
+      isSaving = false;
+      notifyListeners();
+      return false;
+    }
+
+    isSaving = false;
+    notifyListeners();
+    await loadCourses(); // mengganti isi list
+    return true;
+  }
 }
