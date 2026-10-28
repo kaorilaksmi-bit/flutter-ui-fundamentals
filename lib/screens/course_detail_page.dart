@@ -25,6 +25,46 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   // tidak dibutuhkan screen/widget lain, sehingga cukup memakai setState().
   bool _showDetail = false;
 
+  /// TAHAP 8 (P7): konfirmasi, hapus, lalu tampilkan hasil.
+  Future<void> _confirmDelete(Course course) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus course?'),
+        content: Text('Course "${course.title}" akan dihapus.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    // Setelah dialog (await), pastikan widget masih terpasang
+    if (confirmed != true || !mounted) return;
+
+    final provider = context.read<CourseProvider>();
+    final ok = await provider.deleteCourse(course);
+
+    // Setelah await DELETE, periksa mounted lagi sebelum memakai context
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok ? 'Course berhasil dihapus' : 'Gagal menghapus course: ${provider.saveError}',
+        ),
+      ),
+    );
+
+    if (ok) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     // watch(): halaman detail ikut berubah saat favorite atau data diubah
@@ -35,6 +75,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
       orElse: () => widget.course,
     );
     final isFav = provider.isFavorite(course.code);
+    final isSaving = provider.isSaving;
 
     return Scaffold(
       appBar: AppBar(
@@ -44,10 +85,18 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           IconButton(
             tooltip: 'Edit',
             icon: const Icon(Icons.edit),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => CourseFormPage(course: course)),
-            ),
+            onPressed: isSaving
+                ? null
+                : () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => CourseFormPage(course: course)),
+                    ),
+          ),
+          // TAHAP 8 (P7): tombol Delete
+          IconButton(
+            tooltip: 'Hapus',
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: isSaving ? null : () => _confirmDelete(course),
           ),
         ],
       ),

@@ -4,13 +4,15 @@ import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
 
-/// Service yang berkomunikasi dengan backend REST.
+/// TAHAP 4 (Pertemuan 7): service yang berkomunikasi dengan backend REST.
+/// Screen tidak lagi berisi detail request HTTP.
 class CourseApiService {
   CourseApiService(this.baseUrl);
 
   final String baseUrl;
 
   // Nama resource pada endpoint. JSONPlaceholder memakai 'posts'.
+  // Ganti menjadi 'courses' jika memakai endpoint yang berbentuk course.
   static const String resource = 'posts';
 
   Future<List<Course>> getCourses() async {
@@ -22,11 +24,12 @@ class CourseApiService {
 
     final List data = jsonDecode(response.body) as List;
     return data
+        // posts tidak punya code/credits/status, jadi dipetakan lewat fromPostJson
         .map((e) => Course.fromPostJson(e as Map<String, dynamic>))
         .toList();
   }
 
-  /// HTTP POST untuk membuat resource baru.
+  /// TAHAP 6 (P7): HTTP POST untuk membuat resource baru.
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/$resource'),
@@ -43,7 +46,7 @@ class CourseApiService {
     throw Exception('Gagal membuat course (HTTP ${response.statusCode})');
   }
 
-  /// HTTP PUT untuk memperbarui resource (penggantian penuh).
+  /// TAHAP 7 (P7): HTTP PUT untuk memperbarui resource (penggantian penuh).
   Future<void> updateCourse(int id, Course course) async {
     final response = await http.put(
       Uri.parse('$baseUrl/$resource/$id'),
@@ -53,6 +56,17 @@ class CourseApiService {
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Gagal memperbarui course (HTTP ${response.statusCode})');
+    }
+  }
+
+  /// TAHAP 8 (P7): HTTP DELETE untuk menghapus resource.
+  Future<void> deleteCourse(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/$resource/$id'),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Gagal menghapus course (HTTP ${response.statusCode})');
     }
   }
 }

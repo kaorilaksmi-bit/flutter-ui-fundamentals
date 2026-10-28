@@ -93,4 +93,32 @@ class CourseProvider extends ChangeNotifier {
     await loadCourses(); // mengganti isi list
     return true;
   }
+
+  /// TAHAP 8 (P7): menghapus course (DELETE), membersihkan favorites yatim,
+  /// lalu me-refresh daftar. Mengembalikan true jika berhasil.
+  Future<bool> deleteCourse(Course course) async {
+    final id = course.id;
+    if (id == null || isSaving) return false; // cegah proses ganda
+    isSaving = true;
+    saveError = null;
+    notifyListeners();
+
+    try {
+      await repository.deleteCourse(id);
+    } catch (e) {
+      saveError = e.toString();
+      isSaving = false;
+      notifyListeners();
+      return false;
+    }
+
+    // Jika course yang dihapus ada di favorites, hapus juga dari favorites
+    // agar tidak tersisa data yatim.
+    favorites.remove(course.code);
+
+    isSaving = false;
+    notifyListeners();
+    await loadCourses();
+    return true;
+  }
 }
