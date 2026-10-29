@@ -1,65 +1,83 @@
-# Course Explorer v2
+# Course Data Manager
 
-Aplikasi Flutter Pertemuan 6 - State Management & Mobile Application Architecture.
+Aplikasi Flutter untuk mengelola data mata kuliah (course) dengan operasi CRUD
+(Create, Read, Update, Delete) yang terhubung ke backend dan database.
+Aplikasi ini merupakan pengembangan **Course Explorer v2** (Pertemuan 5-6) pada
+Pertemuan 7: RESTful API, Backend Services & Database Integration.
 
 **Nama:** Ni Komang Laksmi Kaori  
 **NIM:** 2415051033
 
-## Arah Dependency
+## Fitur
+
+- Menampilkan daftar course dari backend/database (loading, empty, error dengan retry).
+- Menambah course melalui form dengan validasi (kode, judul, SKS, status).
+- Mengubah course dari halaman detail (kode bersifat read-only).
+- Menghapus course dengan dialog konfirmasi.
+- Favorites memakai `code` sebagai kunci dan konsisten di beberapa screen.
+- Responsive navigation (NavigationBar / NavigationRail).
+- Umpan balik operasi berhasil atau gagal melalui SnackBar.
+
+## Backend yang Digunakan
+
+| Backend | Peran |
+|---|---|
+| **Supabase (PostgreSQL)** | Sumber data aktif aplikasi final (`CourseSupabaseService`), tabel `courses`, dilindungi RLS. |
+| **JSONPlaceholder (REST API dummy)** | Dipakai pada Tahap 1-9 untuk belajar GET/POST/PUT/DELETE (`CourseApiService`). Operasi tulis hanya simulasi. |
+
+## Arsitektur Singkat
 
 ```
-Screen / Widget  ->  Provider  ->  Repository  ->  Service / Data Source
+Screen / Widget  ->  CourseProvider  ->  CourseRepository  ->  CourseDataSource (kontrak)
+                                                                 |-- CourseSupabaseService (aktif)
+                                                                 |-- CourseApiService (REST, cadangan)
 ```
 
-- UI (screens dan widgets) hanya membaca state dari Provider dan memanggil aksinya.
-- UI tidak memanggil `rootBundle` atau `jsonDecode` secara langsung.
-- Provider hanya mengenal Repository, tidak mengenal Service dan tidak menyimpan `BuildContext`.
-- Service tidak mengandung widget atau kode UI.
-- Rangkaian objek (Service -> Repository -> Provider) dibuat sekali di `main()`.
+- Screen dan provider tidak memuat package HTTP maupun Supabase.
+- Sumber data aktif dipilih hanya di `lib/main.dart`. Satu baris berikut yang diubah untuk berpindah sumber:
 
-## Tanggung Jawab Tiap Folder
-
-| Folder | Tanggung jawab |
-|---|---|
-| `lib/main.dart` | Titik masuk aplikasi: merangkai `CourseService`, `CourseRepository`, `CourseProvider` dan menyediakannya lewat `ChangeNotifierProvider`. |
-| `lib/constants/` | Konstanta global, yaitu identitas mahasiswa (nama dan NIM). |
-| `lib/models/` | Representasi data bertipe (`Course`) dan parsing `fromJson`. |
-| `lib/services/` | Detail teknis akses data (membaca JSON asset). Tidak ada kode UI. Dapat diganti dengan API tanpa mengubah screen. |
-| `lib/repositories/` | Abstraksi sumber data bagi Provider (`getCourses()`). Provider tidak tahu data berasal dari mana. |
-| `lib/providers/` | Penyimpan state dan aksi (`ChangeNotifier`): `courses`, `isLoading`, `error`, dan `favorites`. Tidak memegang `BuildContext`. |
-| `lib/screens/` | Halaman utuh: Home, Courses, Favorites, Detail, Profile, dan `ResponsiveShell` (navigasi responsif). |
-| `lib/widgets/` | Widget kecil yang dapat dipakai ulang: `CourseCard` dan `SummaryCards`. |
-| `assets/data/` | Sumber data JSON (`student_data.json`). |
-
-## Hasil Audit (Tahap 16)
-
-| Pemeriksaan | Hasil |
-|---|---|
-| Screen/widget memanggil `rootBundle` atau `jsonDecode` | Tidak ada. Hanya `CourseService` yang memakainya. |
-| `CourseService` mengandung widget/UI | Tidak ada. Tidak mengimpor `flutter/material`. |
-| Provider menyimpan `BuildContext` sebagai state | Tidak ada. |
-| Screen/widget mengimpor service atau repository langsung | Tidak ada. |
-
-## Catatan Endpoint REST (Pertemuan 7)
-
-| Item | Keterangan |
-|---|---|
-| URL endpoint | https://jsonplaceholder.typicode.com/posts/1 |
-| HTTP method | GET |
-| Status code | 200 |
-| Resource | posts |
-
-Contoh response body:
-
-```json
-{
-  "userId": 1,
-  "id": 1,
-  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-  "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
-}
+```dart
+final CourseDataSource dataSource = CourseSupabaseService();
+// untuk REST: CourseApiService('https://jsonplaceholder.typicode.com')
 ```
 
-Field yang ditemukan: `userId`, `id`, `title`, `body`.
+## Struktur Folder
 
-Catatan: JSONPlaceholder hanya mensimulasikan operasi tulis (POST/PUT/DELETE), sehingga data tidak benar-benar tersimpan.
+```
+lib/
+├── main.dart
+├── config/            konfigurasi Supabase (URL dan anon key)
+├── constants/         identitas mahasiswa
+├── models/            Course (fromJson / toJson)
+├── services/          CourseDataSource, CourseApiService, CourseSupabaseService
+├── repositories/      CourseRepository
+├── providers/         CourseProvider (state: courses, loading, error, favorites)
+├── screens/           responsive_shell, home, course_list, course_detail, course_form, favorites, profile
+└── widgets/           course_card, error_view, summary_cards
+supabase/
+└── courses.sql        skrip pembuatan tabel, data awal, dan policy RLS
+```
+
+## Cara Menjalankan
+
+1. Pastikan Flutter terpasang, lalu ambil dependency:
+   ```
+   flutter pub get
+   ```
+2. Siapkan Supabase:
+   - Buat project di [supabase.com](https://supabase.com).
+   - Buka SQL Editor, lalu jalankan isi `supabase/courses.sql`.
+   - Isi `lib/config/supabase_config.dart` dengan **Project URL** dan **anon/publishable key**.
+   - Jangan pernah memakai service role key atau secret key pada aplikasi.
+3. Jalankan aplikasi:
+   ```
+   flutter run
+   ```
+   Pada Windows, aktifkan **Developer Mode** agar plugin dapat dibangun.
+
+## Catatan Keamanan
+
+- Hanya anon/publishable key yang dipakai di aplikasi. Keamanan data dijaga oleh
+  Row Level Security (RLS) di Supabase.
+- Policy pada `courses.sql` sangat permisif dan **hanya untuk praktikum**, bukan pola produksi.
+- Validasi pada UI bukan pengganti validasi dan otorisasi di backend.
