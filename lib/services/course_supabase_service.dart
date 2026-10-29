@@ -65,9 +65,23 @@ class CourseSupabaseService implements CourseDataSource {
     }
   }
 
-  // Sementara, agar kelas tetap dapat dikompilasi.
-  // Dikerjakan pada Tahap 15.
-
+  /// TAHAP 15 (P7): DELETE berdasarkan id.
   @override
-  Future<void> deleteCourse(int id) => throw UnimplementedError();
+  Future<void> deleteCourse(int id) async {
+    try {
+      final rows = await _supabase
+          .from('courses')
+          .delete()
+          .eq('id', id) // hanya baris dengan id ini
+          .select();
+
+      // Jika tidak ada baris yang terhapus (id tidak ada atau ditolak policy),
+      // anggap gagal agar tidak terlihat sukses palsu.
+      if ((rows as List).isEmpty) {
+        throw Exception('Course tidak ditemukan atau tidak boleh dihapus');
+      }
+    } on PostgrestException catch (e) {
+      throw Exception('Gagal menghapus di database: ${e.message}');
+    }
+  }
 }
