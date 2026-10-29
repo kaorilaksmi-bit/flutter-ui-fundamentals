@@ -44,11 +44,29 @@ class CourseSupabaseService implements CourseDataSource {
     }
   }
 
-  // Sementara, agar kelas tetap dapat dikompilasi.
-  // Dikerjakan pada Tahap 14 dan 15.
-
+  /// TAHAP 14 (P7): UPDATE berdasarkan id.
+  /// Signature sama dengan CourseDataSource dan versi REST.
   @override
-  Future<void> updateCourse(int id, Course course) => throw UnimplementedError();
+  Future<void> updateCourse(int id, Course course) async {
+    try {
+      final rows = await _supabase
+          .from('courses')
+          .update(course.toJson())
+          .eq('id', id) // hanya baris dengan id ini
+          .select();
+
+      // Jika tidak ada baris yang berubah (id tidak ada atau ditolak policy),
+      // anggap gagal agar tidak terlihat sukses palsu.
+      if ((rows as List).isEmpty) {
+        throw Exception('Course tidak ditemukan atau tidak boleh diubah');
+      }
+    } on PostgrestException catch (e) {
+      throw Exception('Gagal memperbarui di database: ${e.message}');
+    }
+  }
+
+  // Sementara, agar kelas tetap dapat dikompilasi.
+  // Dikerjakan pada Tahap 15.
 
   @override
   Future<void> deleteCourse(int id) => throw UnimplementedError();
