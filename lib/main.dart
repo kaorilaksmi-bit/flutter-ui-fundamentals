@@ -5,10 +5,7 @@ import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/responsive_shell.dart';
-import 'services/course_api_service.dart';
-
-// Base URL API latihan (tanpa /posts)
-const String apiBaseUrl = 'https://jsonplaceholder.typicode.com';
+import 'services/course_supabase_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,9 +16,9 @@ Future<void> main() async {
     anonKey: supabaseAnonKey,
   );
 
-  // TAHAP 9 (P7): rakit service -> repository -> provider.
-  // Hanya baris ini yang berubah ketika sumber data diganti.
-  final repository = CourseRepository(CourseApiService(apiBaseUrl));
+  // TAHAP 12 (P7): sumber data diganti dari REST ke Supabase.
+  // Hanya baris ini yang berubah (service -> repository -> provider).
+  final repository = CourseRepository(CourseSupabaseService());
 
   runApp(
     // TAHAP 6: menyediakan CourseProvider ke seluruh widget di bawahnya
@@ -29,7 +26,7 @@ Future<void> main() async {
       // TAHAP 10: Service -> Repository -> Provider
       create: (_) => CourseProvider(
         repository,
-        initialFavorites: {'POST-2'},
+        initialFavorites: {'MOB02'},
       )..loadCourses(),
       child: const CourseExplorerApp(),
     ),
