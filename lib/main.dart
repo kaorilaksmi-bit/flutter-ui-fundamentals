@@ -5,6 +5,7 @@ import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/responsive_shell.dart';
+import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
 
 Future<void> main() async {
@@ -16,9 +17,12 @@ Future<void> main() async {
     anonKey: supabaseAnonKey,
   );
 
-  // TAHAP 12 (P7): sumber data diganti dari REST ke Supabase.
-  // Hanya baris ini yang berubah (service -> repository -> provider).
-  final repository = CourseRepository(CourseSupabaseService());
+  // TAHAP 16 (P7): data source aktif dipilih HANYA di sini.
+  // Data source aktif: Supabase
+  // (untuk REST: CourseApiService('https://jsonplaceholder.typicode.com'))
+  // Satu baris di bawah inilah yang berubah ketika berpindah REST <-> Supabase.
+  final CourseDataSource dataSource = CourseSupabaseService();
+  final repository = CourseRepository(dataSource);
 
   runApp(
     // TAHAP 6: menyediakan CourseProvider ke seluruh widget di bawahnya
@@ -40,7 +44,7 @@ class CourseExplorerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Course Explorer',
+      title: 'Course Data Manager',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const ResponsiveShell(),
     );

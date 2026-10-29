@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import 'favorites_page.dart';
 import 'home_page.dart';
-import 'courses_page.dart';
+import 'course_list_page.dart';
 import 'profile_page.dart';
 
 class ResponsiveShell extends StatefulWidget {
@@ -41,7 +41,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
         studentId: studentId,
         studentName: studentName,
       ),
-      CoursesPage(
+      CourseListPage(
         studentId: studentId,
         studentName: studentName,
       ),

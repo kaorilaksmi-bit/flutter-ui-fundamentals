@@ -6,11 +6,11 @@ import 'course_form_page.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
 
-class CoursesPage extends StatelessWidget {
+class CourseListPage extends StatelessWidget {
   final String studentId;
   final String studentName;
 
-  const CoursesPage({super.key, required this.studentId, required this.studentName});
+  const CourseListPage({super.key, required this.studentId, required this.studentName});
 
   int _getCrossAxisCount(double width) {
     if (width < 600) return 1;

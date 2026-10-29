@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Course Explorer v2')),
+      appBar: AppBar(title: const Text('Course Data Manager')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
