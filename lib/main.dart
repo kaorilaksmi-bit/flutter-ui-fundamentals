@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
-import 'screens/responsive_shell.dart';
+import 'screens/login_page.dart';
 import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
 
@@ -46,7 +46,9 @@ class CourseExplorerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Course Data Manager',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const ResponsiveShell(),
+      // PRAKTIK 1 (W9): aplikasi dimulai dari halaman Login.
+      // Pengecekan session otomatis ditambahkan pada Praktik 2.
+      home: const LoginPage(),
     );
   }
 }

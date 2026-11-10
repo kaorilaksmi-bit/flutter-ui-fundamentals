@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
+import '../services/auth_service.dart';
 import '../widgets/summary_cards.dart';
 
 class HomePage extends StatelessWidget {
@@ -37,6 +38,9 @@ class HomePage extends StatelessWidget {
                   const Text('Course Explorer Dashboard', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   Text('$studentId - $studentName', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                  const SizedBox(height: 4),
+                  // PRAKTIK 1 (W9): tampilkan akun yang sedang login
+                  Text('Login sebagai: ${AuthService.instance.currentUser?.email ?? '-'}', style: const TextStyle(color: Colors.white70, fontSize: 13)),
                 ],
               ),
             ),
