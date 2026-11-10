@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import '../services/auth_service.dart';
+import 'login_page.dart';
 import '../widgets/summary_cards.dart';
 
 class HomePage extends StatelessWidget {
@@ -17,7 +18,24 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Course Data Manager')),
+      appBar: AppBar(
+        title: const Text('Course Data Manager'),
+        actions: [
+          // PRAKTIK 2 (W9): tombol Logout
+          IconButton(
+            tooltip: 'Logout',
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await AuthService.instance.logout(); // session dihapus
+              if (!context.mounted) return;
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

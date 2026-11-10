@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show AuthChangeEvent, Supabase;
+import 'app_keys.dart';
 import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/login_page.dart';
+import 'screens/responsive_shell.dart';
+import 'services/auth_service.dart';
 import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
 
@@ -16,6 +20,18 @@ Future<void> main() async {
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
   );
+
+  // PRAKTIK 2 (W9, opsional): mendengarkan perubahan session.
+  // Berguna bila session berakhir atau pengguna logout dari tempat lain.
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    debugPrint('Auth event: ${data.event}');
+    if (data.event == AuthChangeEvent.signedOut) {
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+    }
+  });
 
   // TAHAP 16 (P7): data source aktif dipilih HANYA di sini.
   // Data source aktif: Supabase
@@ -46,9 +62,12 @@ class CourseExplorerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Course Data Manager',
       theme: ThemeData(primarySwatch: Colors.blue),
-      // PRAKTIK 1 (W9): aplikasi dimulai dari halaman Login.
-      // Pengecekan session otomatis ditambahkan pada Praktik 2.
-      home: const LoginPage(),
+      navigatorKey: navigatorKey, // dari app_keys.dart
+      scaffoldMessengerKey: messengerKey,
+      // PRAKTIK 2 (W9): Check Session
+      home: AuthService.instance.isLoggedIn
+          ? const ResponsiveShell() // Session ada -> halaman utama
+          : const LoginPage(), // Tidak ada session -> Login
     );
   }
 }
