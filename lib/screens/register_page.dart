@@ -14,14 +14,17 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _nameC = TextEditingController();
   final _emailC = TextEditingController();
   final _passC = TextEditingController();
   final _confirmC = TextEditingController();
+  String _role = 'seeker'; // PRAKTIK 3: pilihan role saat daftar
   bool _loading = false;
   bool _hidePassword = true;
 
   @override
   void dispose() {
+    _nameC.dispose();
     _emailC.dispose();
     _passC.dispose();
     _confirmC.dispose();
@@ -41,6 +44,8 @@ class _RegisterPageState extends State<RegisterPage> {
       final res = await AuthService.instance.register(
         email: _emailC.text.trim(),
         password: _passC.text,
+        name: _nameC.text.trim(),
+        role: _role,
       );
       if (!mounted) return;
 
@@ -89,6 +94,16 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 24),
                   TextFormField(
+                    controller: _nameC,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Nama wajib diisi' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
                     controller: _emailC,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
@@ -134,6 +149,19 @@ class _RegisterPageState extends State<RegisterPage> {
                       if (v != _passC.text) return 'Konfirmasi password tidak sama';
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: _role,
+                    decoration: const InputDecoration(
+                      labelText: 'Daftar sebagai',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'seeker', child: Text('Seeker (Pencari)')),
+                      DropdownMenuItem(value: 'owner', child: Text('Owner (Pemilik)')),
+                    ],
+                    onChanged: (v) => setState(() => _role = v ?? 'seeker'),
                   ),
                   const SizedBox(height: 20),
                   FilledButton(

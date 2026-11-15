@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import '../services/auth_service.dart';
+import '../widgets/user_info_card.dart';
 import 'login_page.dart';
 import '../widgets/summary_cards.dart';
 
@@ -75,6 +76,9 @@ class HomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // PRAKTIK 3 (W9): informasi pengguna (nama, email, role)
+            const UserInfoCard(),
+            const SizedBox(height: 12),
             // TAHAP 14: ringkasan jumlah Courses dan Favorites (watch pada Provider)
             const SummaryCards(),
             const SizedBox(height: 20),
