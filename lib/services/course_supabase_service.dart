@@ -50,7 +50,11 @@ class CourseSupabaseService implements CourseDataSource {
     try {
       final row = await _supabase
           .from('courses')
-          .insert(course.toJson()) // id dan created_at diisi oleh database
+          // PRAKTIK 5 (W9): owner_id = user yang sedang login
+          .insert({
+            ...course.toJson(),
+            'owner_id': Supabase.instance.client.auth.currentUser!.id,
+          })
           .select()
           .single();
 

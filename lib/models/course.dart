@@ -1,5 +1,6 @@
 class Course {
   final int? id;
+  final String? ownerId; // PRAKTIK 5 (W9): id pemilik (auth.users.id)
   final String code;
   final String title;
   final int credits;
@@ -7,6 +8,7 @@ class Course {
 
   const Course({
     this.id,
+    this.ownerId,
     required this.code,
     required this.title,
     required this.credits,
@@ -19,6 +21,7 @@ class Course {
   factory Course.fromJson(Map<String, dynamic> json) {
     return Course(
       id: json['id'] as int?,
+      ownerId: json['owner_id'] as String?,
       code: json['code'] as String,
       title: json['title'] as String,
       credits: json['credits'] as int,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/profile_provider.dart';
+import '../services/auth_service.dart';
 import '../widgets/role_guard.dart';
 import '../models/course.dart';
 import 'course_form_page.dart';
@@ -79,16 +80,19 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     final isFav = provider.isFavorite(course.code);
     final isSaving = provider.isSaving;
     final role = context.watch<ProfileProvider>().role; // PRAKTIK 4 (W9)
+    // PRAKTIK 5 (W9): apakah course ini milik pengguna yang sedang login?
+    final isMine = course.ownerId != null &&
+        course.ownerId == AuthService.instance.currentUser?.id;
+    final canManage = role == 'admin' || (role == 'owner' && isMine);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(course.title),
         actions: [
-          // PRAKTIK 4 (W9): Edit dan Hapus hanya untuk owner dan admin
-          RoleGuard(
-            role: role,
-            allowed: const ['owner', 'admin'],
-            child: IconButton(
+          // PRAKTIK 5 (W9): Edit dan Hapus hanya untuk PEMILIK data (atau admin).
+          // Ini hanya mengatur tampilan; penjaga sebenarnya adalah RLS di database.
+          if (canManage)
+            IconButton(
               tooltip: 'Edit',
               icon: const Icon(Icons.edit),
               onPressed: isSaving
@@ -98,16 +102,12 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                         MaterialPageRoute(builder: (_) => CourseFormPage(course: course)),
                       ),
             ),
-          ),
-          RoleGuard(
-            role: role,
-            allowed: const ['owner', 'admin'],
-            child: IconButton(
+          if (canManage)
+            IconButton(
               tooltip: 'Hapus',
               icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: isSaving ? null : () => _confirmDelete(course),
             ),
-          ),
         ],
       ),
       body: Padding(
