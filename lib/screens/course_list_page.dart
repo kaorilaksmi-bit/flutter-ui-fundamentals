@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
+import '../providers/profile_provider.dart';
+import '../widgets/role_guard.dart';
 import 'course_detail_page.dart';
 import 'course_form_page.dart';
 import '../widgets/course_card.dart';
@@ -19,14 +21,20 @@ class CourseListPage extends StatelessWidget {
   }
 
   // TAHAP 6 (P7): tombol menuju form tambah course
+  // PRAKTIK 4 (W9): tombol Tambah hanya untuk owner dan admin
   Widget _addButton(BuildContext context) {
-    return FloatingActionButton.extended(
-      onPressed: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const CourseFormPage()),
+    final role = context.watch<ProfileProvider>().role;
+    return RoleGuard(
+      role: role,
+      allowed: const ['owner', 'admin'],
+      child: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CourseFormPage()),
+        ),
+        icon: const Icon(Icons.add),
+        label: const Text('Tambah Course'),
       ),
-      icon: const Icon(Icons.add),
-      label: const Text('Tambah Course'),
     );
   }
 

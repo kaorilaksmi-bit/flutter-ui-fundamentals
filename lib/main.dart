@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart'
 import 'app_keys.dart';
 import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
+import 'providers/profile_provider.dart';
+import 'services/profile_service.dart';
 import 'repositories/course_repository.dart';
 import 'screens/login_page.dart';
 import 'screens/responsive_shell.dart';
@@ -41,13 +43,21 @@ Future<void> main() async {
   final repository = CourseRepository(dataSource);
 
   runApp(
-    // TAHAP 6: menyediakan CourseProvider ke seluruh widget di bawahnya
-    ChangeNotifierProvider(
-      // TAHAP 10: Service -> Repository -> Provider
-      create: (_) => CourseProvider(
-        repository,
-        initialFavorites: {'MOB02'},
-      )..loadCourses(),
+    // Menyediakan provider ke seluruh widget di bawahnya
+    MultiProvider(
+      providers: [
+        // TAHAP 10 (P7): Service -> Repository -> Provider
+        ChangeNotifierProvider(
+          create: (_) => CourseProvider(
+            repository,
+            initialFavorites: {'MOB02'},
+          )..loadCourses(),
+        ),
+        // PRAKTIK 4 (W9): profile dan role pengguna (dimuat jika sudah login)
+        ChangeNotifierProvider(
+          create: (_) => ProfileProvider(ProfileService())..load(),
+        ),
+      ],
       child: const CourseExplorerApp(),
     ),
   );

@@ -1,45 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../services/profile_service.dart';
+import '../providers/profile_provider.dart';
 
-/// PRAKTIK 3 (W9): menampilkan Nama, Email, dan Role pengguna yang login.
-class UserInfoCard extends StatefulWidget {
+/// Menampilkan Nama, Email, dan Role pengguna yang login.
+/// PRAKTIK 4: membaca data dari ProfileProvider (bukan memuat sendiri).
+class UserInfoCard extends StatelessWidget {
   const UserInfoCard({super.key});
 
   @override
-  State<UserInfoCard> createState() => _UserInfoCardState();
-}
-
-class _UserInfoCardState extends State<UserInfoCard> {
-  late final Future<UserProfile?> _profileFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    // Dipanggil sekali, bukan dari build()
-    _profileFuture = ProfileService().getMyProfile();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final pp = context.watch<ProfileProvider>();
+
     return Card(
-      child: FutureBuilder<UserProfile?>(
-        future: _profileFuture,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
+      child: Builder(
+        builder: (context) {
+          if (pp.isLoading) {
             return const Padding(
               padding: EdgeInsets.all(16),
               child: Center(child: CircularProgressIndicator()),
             );
           }
-          if (snap.hasError || snap.data == null) {
+          final p = pp.profile;
+          if (pp.error != null || p == null) {
             return const ListTile(
               leading: Icon(Icons.error_outline, color: Colors.red),
               title: Text('Gagal memuat profil'),
               subtitle: Text('Pastikan tabel profiles dan trigger sudah dibuat'),
             );
           }
-          final p = snap.data!;
           return Column(
             children: [
               ListTile(

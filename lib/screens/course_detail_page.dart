@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
+import '../providers/profile_provider.dart';
+import '../widgets/role_guard.dart';
 import '../models/course.dart';
 import 'course_form_page.dart';
 
@@ -76,27 +78,35 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     );
     final isFav = provider.isFavorite(course.code);
     final isSaving = provider.isSaving;
+    final role = context.watch<ProfileProvider>().role; // PRAKTIK 4 (W9)
 
     return Scaffold(
       appBar: AppBar(
         title: Text(course.title),
         actions: [
-          // TAHAP 7 (P7): tombol Edit
-          IconButton(
-            tooltip: 'Edit',
-            icon: const Icon(Icons.edit),
-            onPressed: isSaving
-                ? null
-                : () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => CourseFormPage(course: course)),
-                    ),
+          // PRAKTIK 4 (W9): Edit dan Hapus hanya untuk owner dan admin
+          RoleGuard(
+            role: role,
+            allowed: const ['owner', 'admin'],
+            child: IconButton(
+              tooltip: 'Edit',
+              icon: const Icon(Icons.edit),
+              onPressed: isSaving
+                  ? null
+                  : () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => CourseFormPage(course: course)),
+                      ),
+            ),
           ),
-          // TAHAP 8 (P7): tombol Delete
-          IconButton(
-            tooltip: 'Hapus',
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: isSaving ? null : () => _confirmDelete(course),
+          RoleGuard(
+            role: role,
+            allowed: const ['owner', 'admin'],
+            child: IconButton(
+              tooltip: 'Hapus',
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: isSaving ? null : () => _confirmDelete(course),
+            ),
           ),
         ],
       ),

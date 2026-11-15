@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
+import '../providers/profile_provider.dart';
 import '../services/auth_service.dart';
+import '../widgets/role_guard.dart';
 import '../widgets/user_info_card.dart';
 import 'login_page.dart';
 import '../widgets/summary_cards.dart';
@@ -28,6 +30,8 @@ class HomePage extends StatelessWidget {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await AuthService.instance.logout(); // session dihapus
+              if (!context.mounted) return;
+              context.read<ProfileProvider>().clear(); // hapus role lama
               if (!context.mounted) return;
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -81,6 +85,21 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 12),
             // TAHAP 14: ringkasan jumlah Courses dan Favorites (watch pada Provider)
             const SummaryCards(),
+            const SizedBox(height: 12),
+            // PRAKTIK 4 (W9): fitur khusus admin (RoleGuard)
+            Consumer<ProfileProvider>(
+              builder: (context, pp, _) => RoleGuard(
+                role: pp.role,
+                allowed: const ['admin'],
+                child: const Card(
+                  child: ListTile(
+                    leading: Icon(Icons.admin_panel_settings),
+                    title: Text('Kelola Data (Admin)'),
+                    subtitle: Text('Fitur ini hanya terlihat oleh admin'),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 20),
             // TAHAP 7: Consumer membatasi rebuild hanya pada daftar favorit
             Consumer<CourseProvider>(

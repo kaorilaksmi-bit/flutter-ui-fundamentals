@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 
 import '../constants/student_identity.dart';
+import '../providers/profile_provider.dart';
 import '../services/auth_service.dart';
 import 'responsive_shell.dart';
 
@@ -50,6 +52,9 @@ class _RegisterPageState extends State<RegisterPage> {
       if (!mounted) return;
 
       if (res.session != null) {
+        // PRAKTIK 4: muat profile dan role sebelum masuk aplikasi
+        await context.read<ProfileProvider>().load();
+        if (!mounted) return;
         // Konfirmasi email nonaktif: pengguna langsung login -> masuk aplikasi.
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const ResponsiveShell()),

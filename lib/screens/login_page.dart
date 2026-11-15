@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 
 import '../constants/student_identity.dart';
+import '../providers/profile_provider.dart';
 import '../services/auth_service.dart';
 import 'register_page.dart';
 import 'responsive_shell.dart';
@@ -41,6 +43,9 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailC.text.trim(),
         password: _passC.text,
       );
+      if (!mounted) return;
+      // PRAKTIK 4: muat profile dan role sebelum masuk aplikasi
+      await context.read<ProfileProvider>().load();
       if (!mounted) return;
       // Login berhasil -> masuk ke aplikasi, halaman login dihapus dari riwayat
       Navigator.of(context).pushAndRemoveUntil(
