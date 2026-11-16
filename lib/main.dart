@@ -1,8 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show AuthChangeEvent, Supabase;
 import 'app_keys.dart';
+import 'firebase_options.dart';
 import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'providers/profile_provider.dart';
@@ -13,9 +15,23 @@ import 'screens/responsive_shell.dart';
 import 'services/auth_service.dart';
 import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
+import 'package:flutter/foundation.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // PRAKTIK 7 (W9): inisialisasi Firebase sebelum Supabase.
+  // Pada praktik ini Firebase hanya dikonfigurasi untuk Android, sehingga
+  // dilewati pada platform lain (Windows/Edge) agar aplikasi tetap berjalan.
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } catch (e) {
+      debugPrint('Firebase gagal diinisialisasi: $e');
+    }
+  }
 
   // TAHAP 10 (P7): inisialisasi Supabase sebelum runApp().
   await Supabase.initialize(
