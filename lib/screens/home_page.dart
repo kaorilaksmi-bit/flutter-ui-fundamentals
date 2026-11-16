@@ -4,6 +4,7 @@ import '../providers/course_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/auth_service.dart';
 import '../widgets/role_guard.dart';
+import '../widgets/security_test_button.dart';
 import '../widgets/user_info_card.dart';
 import 'login_page.dart';
 import '../widgets/summary_cards.dart';
@@ -85,6 +86,9 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 12),
             // TAHAP 14: ringkasan jumlah Courses dan Favorites (watch pada Provider)
             const SummaryCards(),
+            const SizedBox(height: 12),
+            // PRAKTIK 6 (W9): tombol sementara untuk security test
+            const SecurityTestButton(),
             const SizedBox(height: 12),
             // PRAKTIK 4 (W9): fitur khusus admin (RoleGuard)
             Consumer<ProfileProvider>(
