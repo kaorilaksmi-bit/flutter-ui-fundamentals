@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../constants/student_identity.dart';
 import 'package:provider/provider.dart';
+import '../constants/student_identity.dart';
 import '../providers/course_provider.dart';
+import '../services/notification_service.dart';
+import 'course_list_page.dart';
 import 'favorites_page.dart';
 import 'home_page.dart';
-import 'course_list_page.dart';
 import 'profile_page.dart';
 
 class ResponsiveShell extends StatefulWidget {
@@ -17,13 +18,13 @@ class ResponsiveShell extends StatefulWidget {
 class _ResponsiveShellState extends State<ResponsiveShell> {
   int _selectedIndex = 0;
 
-  // TAHAP 11: data course tidak lagi ditulis di sini.
-  // Daftar course, status loading, dan error diambil dari CourseProvider.
+  @override
+  void initState() {
+    super.initState();
+    // PRAKTIK 10: Jalankan inisialisasi lengkap notifikasi
+    NotificationService.instance.init();
+  }
 
-  // TAHAP 7: shell tidak lagi memegang/mendengarkan state favorites.
-  // Setiap widget yang butuh state membacanya langsung dari Provider.
-
-  // TAHAP 13: Consumer kecil agar hanya ikon ini yang rebuild saat favorit berubah
   Widget _favoriteIcon() {
     return Consumer<CourseProvider>(
       builder: (context, provider, child) => Badge(

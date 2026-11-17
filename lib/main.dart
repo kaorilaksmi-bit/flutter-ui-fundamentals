@@ -16,6 +16,8 @@ import 'services/auth_service.dart';
 import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,8 +30,10 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      // PRAKTIK 10: Daftarkan handler background
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     } catch (e) {
-      debugPrint('Firebase gagal diinisialisasi: $e');
+      debugPrint('Firebase init error: $e');
     }
   }
 
